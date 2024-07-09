@@ -28,6 +28,12 @@
 	<array>
 		<string>bluetooth-central</string>
 	</array>
+	<key>NSPrivacyAccessedAPIType</key>
+	<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+	<key>NSPrivacyAccessedAPITypeReasons</key>
+	<array>
+		<string>85F4.1</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
