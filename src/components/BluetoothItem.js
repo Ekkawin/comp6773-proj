@@ -1,13 +1,12 @@
-import { IonIcon, IonItem } from "@ionic/react";
-import { addOutline } from "ionicons/icons";
+import { IonItem } from "@ionic/react";
 import React from "react";
 
-export const BluetoothItem = ({ name }) => {
+export const BluetoothItem = ({ name, icon }) => {
   return (
     <IonItem>
     <div className="flex justify-between items-center w-full">
       <div>{name}</div>
-      <IonIcon icon={addOutline} />
+      {icon}
     </div>
     </IonItem>
   );

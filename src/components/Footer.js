@@ -8,10 +8,10 @@ export const Footer = ({page, setPage}) => {
     <div className="fixed bottom-0 left-0 w-full h-16 bg-gray-50 text-white flex justify-around items-center">
       <div
         className={`flex flex-col justify-center items-center text-black w-full h-full ${
-          (page === "DevicePage" || page === "AddPage") ? "bg-gray-200" : "bg-gray-50"
+          (page === "DeviceListPage" || page === "AddDevicePage") ? "bg-gray-200" : "bg-gray-50"
         }`}
         onClick={() => {
-          setPage("DevicePage");
+          setPage("DeviceListPage");
         }}
       >
         {" "}
@@ -19,7 +19,7 @@ export const Footer = ({page, setPage}) => {
       </div>
       <div
         className={`flex flex-col justify-center items-center text-black w-full h-full ${
-          (page !== "DevicePage" && page !== "AddPage") ? "bg-gray-200" : "bg-gray-50"
+          (page !== "DeviceListPage" && page !== "AddPage") ? "bg-gray-200" : "bg-gray-50"
         }`}
         onClick={() => {
           setPage("SettingPage");

@@ -1,30 +1,41 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { css } from "@emotion/react";
+import React, { useCallback, useEffect, useState } from "react";
 import { PageWrapper } from "./PageWrapper";
 import { Title } from "./Title";
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Device } from "@capacitor/device";
-import { IonItem, IonSearchbar, IonSpinner } from "@ionic/react";
+import { IonIcon, IonItem, IonSearchbar, IonSpinner } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 import { BluetoothItem } from "./BluetoothItem";
+import { addOutline } from "ionicons/icons";
 
-export const AddNewDevice = ({ setPage }) => {
+export const AddDevicePage = ({
+  connectedDevices,
+  setPage,
+  setConnectedDevices,
+}) => {
   const [bleDevices, setBleDevice] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const getBle = useCallback(async () => {
     let devices = [];
+    const connectedNames = connectedDevices.map(({ name }) => name);
     await BleClient.initialize();
 
     await BleClient.requestLEScan({}, (result) => {
       if (result.device?.name) {
         const isExist = devices.some(({ name }) => {
-          return name === result.device?.name;
+          return name === result.device?.name && !connectedNames.include(name);
+          // return name === result.device?.name;
         });
 
         if (!isExist) {
-          devices.push({ name: result.device.name, rssi: result.rssi });
-          console.log("<--FOUND-->", devices);
+          devices.push({
+            id: result.device.deviceId,
+            name: result.device.name,
+            rssi: result.rssi,
+          });
+          console.log("<--FOUND-->", result);
+          console.log("<--Service Data-->", result.serviceData);
         }
       }
     });
@@ -54,6 +65,15 @@ export const AddNewDevice = ({ setPage }) => {
     }
   }, []);
 
+  const connectDevice = useCallback(async (id, name) => {
+    await BleClient.connect(id);
+    console.log("connected to device", id);
+    const services = await BleClient.getServices(id);
+    
+    setConnectedDevices([...connectedDevices, { id, name, service:services[0] }]);
+    setPage("DeviceListPage");
+  }, []);
+
   useEffect(() => {
     try {
       setIsLoading(true);
@@ -79,12 +99,26 @@ export const AddNewDevice = ({ setPage }) => {
           <IonSpinner />
         </div>
       ) : (
-        bleDevices.map(({ name }) => <BluetoothItem name={name} />)
+        bleDevices.map(({ id, name }) => (
+          <BluetoothItem
+            name={name}
+            icon={
+              <IonIcon
+                icon={addOutline}
+                onClick={() => {
+                  setIsLoading(true);
+                  connectDevice(id, name);
+                }}
+              />
+            }
+          />
+        ))
       )}
       <div
         className="pt-10 text-base text-center text-blue-700"
         onClick={() => {
-          setPage("AddPage");
+          setIsLoading(true);
+          logDeviceInfo();
         }}
       >
         Press to Refresh

@@ -1,17 +1,32 @@
+import React, { useState } from "react";
+import {  DeviceListPage } from "./DeviceListPage";
+import { AddDevicePage } from "./AddDevicePage";
+import { DevicePage } from "./DevicePage";
 
-import React from "react";
-import { ConnectedDevice } from "./ConnectedDevice";
-import { AddNewDevice } from "./AddNewDevice";
+export const Body = ({ page, setPage }) => {
+  const [connectedDevices, setConnectedDevices] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState(null);
 
-export const Body = ({page, setPage}) => {
-    
-        switch (page) {
-          case "DevicePage":
-            return <ConnectedDevice setPage={setPage} />
-          case "AddPage":
-            return <AddNewDevice setPage={setPage} />
-          default:
-            return <div>hellp</div>;
-        }
-      
-}
+  console.log("connected Devives", connectedDevices);
+
+  switch (page) {
+    case "DeviceListPage":
+      return <DeviceListPage devices={connectedDevices} setPage={setPage} setSelectedDevice={setSelectedDevice} />;
+    case "AddPage":
+      return (
+        <AddDevicePage
+          connectedDevices={connectedDevices}
+          setPage={setPage}
+          setConnectedDevices={setConnectedDevices}
+        />
+      );
+    case "DevicePage":
+      return (
+        <DevicePage
+          device={selectedDevice}
+        />
+      );
+    default:
+      return <div>hellp</div>;
+  }
+};

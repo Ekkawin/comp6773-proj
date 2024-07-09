@@ -24,7 +24,7 @@ import '@ionic/react/css/display.css';
 function App() {
 
   setupIonicReact();
-  const [page, setPage] = useState("DevicePage");
+  const [page, setPage] = useState("DeviceListPage");
 
   // setPage('device')
   // console.log("page", page);
