@@ -1,9 +1,9 @@
 /** @jsxImportSource @emotion/react */
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { PageWrapper } from "./PageWrapper";
 import { Title } from "./Title";
-import { IonItem, IonSearchbar } from "@ionic/react";
-
+import { IonItem, IonSearchbar, IonToggle } from "@ionic/react";
+import { css } from "@emotion/react";
 import { SubTitle } from "./Subtitle";
 import { BluetoothItem } from "./BluetoothItem";
 import {
@@ -12,69 +12,64 @@ import {
   textToDataView,
 } from "@capacitor-community/bluetooth-le";
 
-export const DevicePage = ({ device }) => {
-  const readData = useCallback(async () => {
-    // await BleClient.startEnabledNotifications((val)=>{
-    //     console.log("IsALLOW", val);
-    // })
-    console.log("This Device", device);
-
-    await BleClient.connect(device.id);
-
-    const serviceId = device.service.uuid;
-    const readCharId = device.service.characteristics.find(
-      ({ properties }) => properties.read && properties.notify
-    ).uuid;
-    const writeCharId = device.service.characteristics.find(
-      ({ properties }) => properties.write
-    ).uuid;
-
-    await BleClient.startNotifications(
-      device.id,
-      serviceId,
-      readCharId,
-      (value) => {
-        console.log("current heart rate", dataViewToText(value));
-      }
-    );
-
-    await BleClient.write(
-      device.id,
-      serviceId,
-      writeCharId,
-      textToDataView("p")
-    );
-    console.log("written [1, 0] to control point");
-
-    // disconnect after 10 sec
-    setTimeout(async () => {
-      await BleClient.stopNotifications(device.id, serviceId, readCharId);
-      await BleClient.disconnect(device.id);
-      console.log("disconnected from device", device);
-    }, 10000);
-  }, []);
-
-  useEffect(() => {
-    readData();
-  }, []);
+export const DevicePage = ({ device, publish, clearInterval, setPage }) => {
+  const [intervalId, setIntervalId] = useState(null);
 
   return (
     <PageWrapper>
-      <Title text={device.name} />
+      <Title text={device?.name || "Device 1"} />
       <IonItem>
         <IonSearchbar></IonSearchbar>
       </IonItem>
 
-      <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
+      <SubTitle>DEVICE MQTT PUBLISHING</SubTitle>
+      <IonItem>
+        <div className="flex justify-between items-center w-full">
+          <div>Enable Publishing</div>
+          <IonToggle
+            justify="end"
+            onIonChange={async (e) => {
+              if (e.detail.checked) {
+                const serviceId = device.service.uuid;
+                const readCharId = device.service.characteristics.find(
+                  ({ properties }) => properties.read && properties.notify
+                ).uuid;
+                const writeCharId = device.service.characteristics.find(
+                  ({ properties }) => properties.write
+                ).uuid;
 
-      {/* <div
-        className="pt-10 text-base text-center text-blue-700"
-        onClick={() => {
-          setPage("AddPage");
-        }}
-      >
-        Add New IoT
-      </div> */}
+                publish(device.id, serviceId, readCharId, writeCharId);
+              } else {
+                clearInterval();
+              }
+            }}
+          />
+        </div>
+      </IonItem>
+      <div className="px-4 pt-2 flex justify-between items-center w-full">
+        <div>Publish Log</div>
+        <div
+          onClick={() => {
+            setPage("PublishLogPage");
+          }}
+        >
+          View
+        </div>
+      </div>
+
+      <div className="pt-10">
+        <SubTitle>DEVICE MQTT SUBSCRIBING</SubTitle>
+        <IonItem>
+          <div className="flex justify-between items-center w-full">
+            <div className="w-full">Enable Subscribing</div>
+            <IonToggle />
+          </div>
+        </IonItem>
+        <div className="px-4 pt-2 flex justify-between items-center w-full">
+          <div>Subscription Log</div>
+          <div>View</div>
+        </div>
+      </div>
     </PageWrapper>
   );
 };
