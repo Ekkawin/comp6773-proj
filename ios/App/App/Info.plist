@@ -24,15 +24,15 @@
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Uses Bluetooth to connect and interact with peripheral BLE devices.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>bluetooth-central</string>
-	</array>
 	<key>NSPrivacyAccessedAPIType</key>
 	<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
 	<key>NSPrivacyAccessedAPITypeReasons</key>
 	<array>
 		<string>85F4.1</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
