@@ -3,13 +3,15 @@ import { PageWrapper } from "./PageWrapper";
 import { Title } from "./Title";
 import {
     IonButton,
+    IonContent,
     IonInput,
     IonItem,
     IonLabel,
     IonList,
+    IonListHeader,
     useIonToast,
 } from "@ionic/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 function TestMQTTPage() {
     const [present] = useIonToast();
@@ -20,29 +22,31 @@ function TestMQTTPage() {
     const [subscribe, setSubscribe] = useState({
         topic: "",
     });
-
-    const mqttClient = new PubSub({
-        region: "ap-southeast-2",
-        endpoint:
-            "wss://aibmybrjyb7gc-ats.iot.ap-southeast-2.amazonaws.com/mqtt",
-    });
+    const [subscribedTopics, setSubscribedTopics] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const mqttClient = useMemo(() => {
+        return new PubSub({
+            region: "ap-southeast-2",
+            endpoint:
+                "wss://aibmybrjyb7gc-ats.iot.ap-southeast-2.amazonaws.com/mqtt",
+        });
+    }, []);
 
     return (
         <PageWrapper>
             <Title text={"MQTT Testing"} />
 
-            <IonList>
-                <IonItem>
+            <IonList className="overflow-auto">
+                <IonListHeader>
                     <IonLabel>
                         <h1>Publishing</h1>
                     </IonLabel>
-                </IonItem>
+                </IonListHeader>
                 <IonItem>
                     <IonInput
                         label={"Publish topic"}
                         placeholder={"Enter topic to publish to"}
-                        value={publish.topic}
-                        onChange={(e) => {
+                        onIonInput={(e) => {
                             setPublish((prev) => {
                                 return {
                                     ...prev,
@@ -56,8 +60,7 @@ function TestMQTTPage() {
                     <IonInput
                         label={"Publish message"}
                         placeholder={"Enter message to publish"}
-                        value={publish.message}
-                        onChange={(e) => {
+                        onIonInput={(e) => {
                             setPublish((prev) => {
                                 return {
                                     ...prev,
@@ -70,15 +73,21 @@ function TestMQTTPage() {
 
                 <IonItem>
                     <IonButton
-                        onClick={() => {
-                            mqttClient
-                                .publish({
-                                    topics: [publish.topic],
-                                    message: publish.message,
-                                })
-                                .then(() => {
-                                    present("Message published.", 5000);
-                                });
+                        onClick={async () => {
+                            if (
+                                publish.topic === "" ||
+                                publish.message === ""
+                            ) {
+                                present(
+                                    "Publish topic or message cannot be empty"
+                                );
+                                return;
+                            }
+                            await mqttClient.publish({
+                                topics: publish.topic,
+                                message: { msg: publish.message },
+                            });
+                            present("Published message.", 3000);
                         }}
                     >
                         Publish message
@@ -87,17 +96,17 @@ function TestMQTTPage() {
             </IonList>
 
             <IonList>
-                <IonItem>
+                <IonListHeader>
                     <IonLabel>
                         <h1>Subscribing</h1>
                     </IonLabel>
-                </IonItem>
+                </IonListHeader>
                 <IonItem>
                     <IonInput
                         label={"Subscribe topic"}
                         placeholder={"Enter topic to subscribe to"}
                         value={subscribe.topic}
-                        onChange={(e) => {
+                        onIonInput={(e) => {
                             setSubscribe((prev) => {
                                 return {
                                     ...prev,
@@ -111,30 +120,106 @@ function TestMQTTPage() {
                 <IonItem>
                     <IonButton
                         onClick={() => {
+                            if (subscribe.topic === "") {
+                                present(
+                                    "Cannot subscribe to empty topic",
+                                    3000
+                                );
+                                return;
+                            }
+
+                            if (subscribedTopics.includes(subscribe.topic)) {
+                                present("Already subscribed to topic", 3000);
+                                return;
+                            }
+
                             mqttClient
                                 .subscribe({
-                                    topics: ["test"],
+                                    topics: [subscribe.topic],
                                 })
                                 .subscribe({
                                     next: (data) => {
-                                        console.log(data);
-                                        present(data.message, 5000);
-                                    },
-                                    error: (error) => {
-                                        console.log(error);
-                                        present(error.message, 5000);
-                                    },
-                                    complete: () => {
-                                        console.log("Complete");
+                                        setMessages((prev) => {
+                                            const next = structuredClone(prev);
+
+                                            const symbols =
+                                                Object.getOwnPropertySymbols(
+                                                    data
+                                                );
+
+                                            if (symbols.length === 0) {
+                                                throw new Error(
+                                                    "Received message has no topic."
+                                                );
+                                            }
+
+                                            next.push({
+                                                ...data,
+                                                received: new Date(),
+                                                topic: data[symbols[0]],
+                                            });
+                                            return next;
+                                        });
                                     },
                                 });
 
-                            present("Topic subscribed.", 5000);
+                            setSubscribedTopics((prev) => {
+                                const next = structuredClone(prev);
+                                next.push(subscribe.topic);
+                                return next;
+                            });
+                            present("Topic subscribed", 3000);
                         }}
                     >
                         Subscribe
                     </IonButton>
                 </IonItem>
+            </IonList>
+
+            <IonList inset={true}>
+                <IonListHeader>
+                    <IonLabel>
+                        <h1>Subscribed topics</h1>
+                    </IonLabel>
+                </IonListHeader>
+                {subscribedTopics.map((topic, index) => {
+                    return (
+                        <IonItem key={index}>
+                            <IonLabel>{topic}</IonLabel>
+                        </IonItem>
+                    );
+                })}
+                {subscribedTopics.length === 0 && (
+                    <IonItem>
+                        <IonLabel>No topics yet.</IonLabel>
+                    </IonItem>
+                )}
+            </IonList>
+
+            <IonList inset={true}>
+                <IonListHeader>
+                    <IonLabel>
+                        <h1>Message log</h1>
+                    </IonLabel>
+                </IonListHeader>
+                {messages.map((message, index) => {
+                    return (
+                        <IonItem key={index}>
+                            <IonLabel>
+                                <span className="font-semibold">
+                                    [{message.topic}]{" "}
+                                </span>
+                                {message.received.toLocaleString()} :{" "}
+                                {message.msg}
+                            </IonLabel>
+                        </IonItem>
+                    );
+                })}
+                {messages.length === 0 && (
+                    <IonItem>
+                        <IonLabel>No messages yet.</IonLabel>
+                    </IonItem>
+                )}
             </IonList>
         </PageWrapper>
     );
