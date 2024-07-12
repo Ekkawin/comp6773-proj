@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { DeviceListPage } from "./DeviceListPage";
 import { AddDevicePage } from "./AddDevicePage";
 import { DevicePage } from "./DevicePage";
@@ -22,17 +22,24 @@ export const Body = ({ page, setPage }) => {
     [data]
   );
 
-  const publish = useCallback(async (deviceId, serviceId, readId, writeId) => {
-    
-    await BleClient.startNotifications(deviceId, serviceId, readId, setLog);
+  const publish = useCallback(
+    async (deviceId, serviceId, readId, writeId) => {
+      await BleClient.startNotifications(deviceId, serviceId, readId, setLog);
 
-    const id = setInterval(async () => {
-      console.log("write");
-      
-      await BleClient.write(deviceId, serviceId, writeId, textToDataView("p"));
-    }, 5000);
-    setIntervalId(id);
-  }, [setLog]);
+      const id = setInterval(async () => {
+        console.log("write");
+
+        await BleClient.write(
+          deviceId,
+          serviceId,
+          writeId,
+          textToDataView("p")
+        );
+      }, 5000);
+      setIntervalId(id);
+    },
+    [setLog]
+  );
 
   const clearPublish = useCallback(() => {
     clearInterval(intervalId);

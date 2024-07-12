@@ -1,12 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import { PageWrapper } from "./PageWrapper";
 import { Title } from "./Title";
-import { BleClient } from "@capacitor-community/bluetooth-le";
-
-import { IonIcon, IonItem, IonSearchbar, IonSpinner } from "@ionic/react";
+import { IonItem, IonSearchbar } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 
-export const PublishLogPage = ({logs}) => {
+export const PublishLogPage = ({ logs }) => {
   console.log("log--->", logs);
   return (
     <PageWrapper>
