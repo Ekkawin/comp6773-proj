@@ -1,26 +1,23 @@
-/** @jsxImportSource @emotion/react */
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import { PageWrapper } from "./PageWrapper";
 import { Title } from "./Title";
 import { IonItem, IonSearchbar, IonToggle } from "@ionic/react";
-import { css } from "@emotion/react";
 import { SubTitle } from "./Subtitle";
-import { BluetoothItem } from "./BluetoothItem";
-import {
-  BleClient,
-  dataViewToText,
-  textToDataView,
-} from "@capacitor-community/bluetooth-le";
 
-export const DevicePage = ({ device, publish, clearInterval, setPage }) => {
-  const [intervalId, setIntervalId] = useState(null);
-
+export const DevicePage = ({
+  device,
+  isPublished,
+  setPublishDevices,
+  publish,
+  clearInterval,
+  setPage,
+}) => {
   return (
     <PageWrapper>
       <Title text={device?.name || "Device 1"} />
-      <IonItem>
+      {/* <IonItem>
         <IonSearchbar></IonSearchbar>
-      </IonItem>
+      </IonItem> */}
 
       <SubTitle>DEVICE MQTT PUBLISHING</SubTitle>
       <IonItem>
@@ -28,6 +25,7 @@ export const DevicePage = ({ device, publish, clearInterval, setPage }) => {
           <div>Enable Publishing</div>
           <IonToggle
             justify="end"
+            checked={isPublished}
             onIonChange={async (e) => {
               if (e.detail.checked) {
                 const serviceId = device.service.uuid;
@@ -38,8 +36,10 @@ export const DevicePage = ({ device, publish, clearInterval, setPage }) => {
                   ({ properties }) => properties.write
                 ).uuid;
 
+                setPublishDevices([device.id]);
                 publish(device.id, serviceId, readCharId, writeCharId);
               } else {
+                setPublishDevices([]);
                 clearInterval();
               }
             }}
@@ -67,7 +67,13 @@ export const DevicePage = ({ device, publish, clearInterval, setPage }) => {
         </IonItem>
         <div className="px-4 pt-2 flex justify-between items-center w-full">
           <div>Subscription Log</div>
-          <div>View</div>
+          <div
+            onClick={() => {
+              setPage("SubscriptionLogPage");
+            }}
+          >
+            View
+          </div>
         </div>
       </div>
     </PageWrapper>

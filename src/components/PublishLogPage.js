@@ -4,10 +4,13 @@ import { Title } from "./Title";
 import { IonItem, IonSearchbar } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 
-export const PublishLogPage = ({ logs }) => {
+export const PublishLogPage = ({ logs, setPage }) => {
   console.log("log--->", logs);
   return (
     <PageWrapper>
+      <div className="text-blue-600 pb-4" onClick={()=>{
+        setPage("DevicePage")
+      }}>{"< Device List"}</div>
       <Title text={"Publish Logs"} />
       <IonItem>
         <IonSearchbar></IonSearchbar>

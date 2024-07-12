@@ -1,5 +1,4 @@
-/** @jsxImportSource @emotion/react */
-import React, { useEffect, useMemo } from "react";
+import React from "react";
 import { PageWrapper } from "./PageWrapper";
 import { Title } from "./Title";
 import { IonItem, IonSearchbar } from "@ionic/react";

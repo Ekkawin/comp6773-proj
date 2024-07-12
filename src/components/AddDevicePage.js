@@ -34,8 +34,7 @@ export const AddDevicePage = ({
             name: result.device.name,
             rssi: result.rssi,
           });
-          console.log("<--FOUND-->", result);
-          console.log("<--Service Data-->", result.serviceData);
+          
         }
       }
     });
@@ -84,7 +83,7 @@ export const AddDevicePage = ({
     }
   }, []);
 
-  console.log("Device ---->", bleDevices);
+
 
   return (
     <PageWrapper>
@@ -93,7 +92,7 @@ export const AddDevicePage = ({
         <IonSearchbar></IonSearchbar>
       </IonItem>
 
-      <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
+      <SubTitle>AVAILABLE DEVICES (BLUETOOTH)</SubTitle>
       {isLoading ? (
         <div className="flex justify-center items-center">
           <IonSpinner />
