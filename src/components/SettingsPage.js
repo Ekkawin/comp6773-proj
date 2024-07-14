@@ -1,27 +1,55 @@
-import { IonButton } from "@ionic/react";
-import { PageWrapper } from "./PageWrapper";
-import { Title } from "./Title";
+import {
+    IonContent,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    IonPage,
+} from "@ionic/react";
+import { useHistory } from "react-router";
 
-function SettingsPage({ signOut, setPage }) {
+function SettingsPage({ signOut }) {
+    const history = useHistory();
+
     return (
-        <PageWrapper>
-            <Title text={"Settings"} />
-            <IonButton
-                onClick={() => {
-                    signOut();
-                    setPage("DeviceListPage");
-                }}
-            >
-                Sign out
-            </IonButton>
-            <IonButton
-                onClick={() => {
-                    setPage("TestMQTTPage");
-                }}
-            >
-                Go to MQTT testing
-            </IonButton>
-        </PageWrapper>
+        <IonPage>
+            <IonHeader translucent={true}>
+                <IonToolbar>
+                    <IonTitle>Settings</IonTitle>
+                </IonToolbar>
+            </IonHeader>
+            <IonContent fullscreen={true}>
+                <IonHeader collapse="condense">
+                    <IonToolbar>
+                        <IonTitle size="large">Settings</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
+
+                <IonList inset>
+                    <IonItem
+                        button
+                        detail
+                        onClick={() => {
+                            history.push("/mqtt-test-client");
+                        }}
+                    >
+                        <IonLabel>Open MQTT test client</IonLabel>
+                    </IonItem>
+                    <IonItem
+                        button
+                        detail
+                        onClick={() => {
+                            signOut();
+                            history.push("/device-list");
+                        }}
+                    >
+                        <IonLabel>Sign out</IonLabel>
+                    </IonItem>
+                </IonList>
+            </IonContent>
+        </IonPage>
     );
 }
 

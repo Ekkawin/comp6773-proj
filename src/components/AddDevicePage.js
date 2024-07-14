@@ -1,20 +1,25 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { PageWrapper } from "./PageWrapper";
-import { Title } from "./Title";
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Device } from "@capacitor/device";
-import { IonIcon, IonItem, IonSearchbar, IonSpinner } from "@ionic/react";
+import {
+    IonContent,
+    IonHeader,
+    IonIcon,
+    IonPage,
+    IonSearchbar,
+    IonSpinner,
+    IonTitle,
+    IonToolbar,
+} from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 import { BluetoothItem } from "./BluetoothItem";
 import { addOutline } from "ionicons/icons";
+import { useHistory } from "react-router";
 
-export const AddDevicePage = ({
-    connectedDevices,
-    setPage,
-    setConnectedDevices,
-}) => {
+export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
     const [bleDevices, setBleDevice] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const history = useHistory();
 
     const getBle = useCallback(async () => {
         let devices = [];
@@ -78,9 +83,9 @@ export const AddDevicePage = ({
                 ...connectedDevices,
                 { id, name, service: services[0] },
             ]);
-            setPage("DeviceListPage");
+            history.push("/device-list");
         },
-        [connectedDevices, setConnectedDevices, setPage]
+        [connectedDevices, setConnectedDevices]
     );
 
     useEffect(() => {
@@ -96,42 +101,51 @@ export const AddDevicePage = ({
     console.log("Device ---->", bleDevices);
 
     return (
-        <PageWrapper>
-            <Title text={"Add new devices"} />
-            <IonItem>
-                <IonSearchbar></IonSearchbar>
-            </IonItem>
+        <IonPage>
+            <IonHeader translucent={true}>
+                <IonToolbar>
+                    <IonTitle>Add new device</IonTitle>
+                </IonToolbar>
+            </IonHeader>
+            <IonSearchbar></IonSearchbar>
+            <IonContent fullscreen={true}>
+                <IonHeader collapse="condense">
+                    <IonToolbar>
+                        <IonTitle size="large">Add new device</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
 
-            <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
-            {isLoading ? (
-                <div className="flex justify-center items-center">
-                    <IonSpinner />
+                <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
+                {isLoading ? (
+                    <div className="flex justify-center items-center">
+                        <IonSpinner />
+                    </div>
+                ) : (
+                    bleDevices.map(({ id, name }) => (
+                        <BluetoothItem
+                            name={name}
+                            icon={
+                                <IonIcon
+                                    icon={addOutline}
+                                    onClick={() => {
+                                        setIsLoading(true);
+                                        connectDevice(id, name);
+                                    }}
+                                />
+                            }
+                        />
+                    ))
+                )}
+                <div
+                    className="pt-10 text-base text-center text-blue-700"
+                    onClick={() => {
+                        setIsLoading(true);
+                        logDeviceInfo();
+                    }}
+                >
+                    Press to Refresh
                 </div>
-            ) : (
-                bleDevices.map(({ id, name }) => (
-                    <BluetoothItem
-                        name={name}
-                        icon={
-                            <IonIcon
-                                icon={addOutline}
-                                onClick={() => {
-                                    setIsLoading(true);
-                                    connectDevice(id, name);
-                                }}
-                            />
-                        }
-                    />
-                ))
-            )}
-            <div
-                className="pt-10 text-base text-center text-blue-700"
-                onClick={() => {
-                    setIsLoading(true);
-                    logDeviceInfo();
-                }}
-            >
-                Press to Refresh
-            </div>
-        </PageWrapper>
+            </IonContent>
+        </IonPage>
     );
 };

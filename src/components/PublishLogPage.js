@@ -1,27 +1,41 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { PageWrapper } from "./PageWrapper";
-import { Title } from "./Title";
-import { BleClient } from "@capacitor-community/bluetooth-le";
+import React from "react";
 
-import { IonIcon, IonItem, IonSearchbar, IonSpinner } from "@ionic/react";
+import {
+    IonItem,
+    IonSearchbar,
+    IonContent,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    IonPage,
+} from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 
-export const PublishLogPage = ({logs}) => {
-  console.log("log--->", logs);
-  return (
-    <PageWrapper>
-      <Title text={"Publish Logs"} />
-      <IonItem>
-        <IonSearchbar></IonSearchbar>
-      </IonItem>
+export const PublishLogPage = ({ logs }) => {
+    return (
+        <IonPage>
+            <IonHeader translucent={true}>
+                <IonToolbar>
+                    <IonTitle>Publish logs</IonTitle>
+                </IonToolbar>
+            </IonHeader>
+            <IonContent fullscreen={true}>
+                <IonHeader collapse="condense">
+                    <IonToolbar>
+                        <IonTitle size="large">Publish logs</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
 
-      <SubTitle>Logs</SubTitle>
-      {logs.map((data) => (
-        <div>{data}</div>
-      ))}
-      <div className="pt-10 text-base text-center text-blue-700">
-        Press to Refresh
-      </div>
-    </PageWrapper>
-  );
+                <IonSearchbar></IonSearchbar>
+
+                <SubTitle>Logs</SubTitle>
+                {logs.map((data) => (
+                    <div>{data}</div>
+                ))}
+                <div className="pt-10 text-base text-center text-blue-700">
+                    Press to Refresh
+                </div>
+            </IonContent>
+        </IonPage>
+    );
 };
