@@ -53,45 +53,14 @@ Amplify.configure(amplifyconfig);
 function App() {
     setupIonicReact();
 
-    const [connectedDevices, setConnectedDevices] = useState([]);
+    const [connectedDevices, setConnectedDevices] = useState([{name: '1', id: '1231231283912', service:{id:'123sadf', readId: 'sdfg234', writeId:'123sdf234'}}]);
+    // const [connectedDevices, setConnectedDevices] = useState([]);
     const [selectedDevice, setSelectedDevice] = useState(null);
-    const [intervalId, setIntervalId] = useState(null);
     const [data, setData] = useState([]);
+    const [publishedDevices, setPublishedDevices] = useState([])
 
-    const setLog = useCallback(
-        (d) => {
-            setData([...data, dataViewToText(d)]);
-        },
-        [data]
-    );
+    
 
-    const publish = useCallback(
-        async (deviceId, serviceId, readId, writeId) => {
-            await BleClient.startNotifications(
-                deviceId,
-                serviceId,
-                readId,
-                setLog
-            );
-
-            const id = setInterval(async () => {
-                console.log("write");
-
-                await BleClient.write(
-                    deviceId,
-                    serviceId,
-                    writeId,
-                    textToDataView("p")
-                );
-            }, 5000);
-            setIntervalId(id);
-        },
-        [setLog]
-    );
-
-    const clearPublish = useCallback(() => {
-        clearInterval(intervalId);
-    }, [intervalId]);
 
     return (
         <Authenticator className="mt-10">
@@ -110,6 +79,7 @@ function App() {
                                                 setSelectedDevice={
                                                     setSelectedDevice
                                                 }
+                                                publishedDevices={publishedDevices}
                                             />
                                         )}
                                         exact={true}
@@ -129,23 +99,24 @@ function App() {
                                         exact={true}
                                     />
                                     <Route
-                                        path="/device"
+                                        path="/device/:deviceId"
                                         render={() => (
                                             <DevicePage
                                                 device={selectedDevice}
-                                                publish={publish}
-                                                clearInterval={clearPublish}
+                                                // publish={publish}
+                                                // clearInterval={clearPublish}
+                                                setPublishedDevices={setPublishedDevices}
                                             />
                                         )}
                                         exact={true}
                                     />
-                                    <Route
+                                    {/* <Route
                                         path="/device/publish-logs"
                                         render={() => (
                                             <PublishLogPage logs={data} />
                                         )}
                                         exact={true}
-                                    />
+                                    /> */}
                                     <Route
                                         path="/settings"
                                         render={() => (
