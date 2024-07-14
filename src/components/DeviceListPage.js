@@ -1,43 +1,62 @@
 import React from "react";
-import { PageWrapper } from "./PageWrapper";
-import { Title } from "./Title";
-import { IonItem, IonSearchbar } from "@ionic/react";
+import {
+    IonSearchbar,
+    IonContent,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    IonPage,
+} from "@ionic/react";
 
 import { SubTitle } from "./Subtitle";
 import { BluetoothItem } from "./BluetoothItem";
+import { useHistory } from "react-router";
 
-export const DeviceListPage = ({ devices, setPage, setSelectedDevice }) => {
-  return (
-    <PageWrapper>
-      <Title text={"Connected devices"} />
-      <IonItem>
-        <IonSearchbar></IonSearchbar>
-      </IonItem>
+export const DeviceListPage = ({ devices, setSelectedDevice }) => {
+    const history = useHistory();
 
-      <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
-      {devices.map((device) => (
-        <BluetoothItem
-          name={device.name}
-          icon={
-            <div
-              onClick={() => {
-                setSelectedDevice(device);
-                setPage("DevicePage");
-              }}
-            >
-              View
-            </div>
-          }
-        />
-      ))}
-      <div
-        className="pt-10 text-base text-center text-blue-700"
-        onClick={() => {
-          setPage("AddPage");
-        }}
-      >
-        Add New IoT
-      </div>
-    </PageWrapper>
-  );
+    return (
+        <IonPage>
+            <IonHeader translucent={true}>
+                <IonToolbar>
+                    <IonTitle>Connected devices</IonTitle>
+                </IonToolbar>
+            </IonHeader>
+
+            <IonContent fullscreen={true}>
+                <IonHeader collapse="condense">
+                    <IonToolbar>
+                        <IonTitle size="large">Connected devices</IonTitle>
+                    </IonToolbar>
+                </IonHeader>
+
+                <IonSearchbar></IonSearchbar>
+
+                <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
+                {devices.map((device) => (
+                    <BluetoothItem
+                        name={device.name}
+                        icon={
+                            <div
+                                onClick={() => {
+                                    setSelectedDevice(device);
+                                    history.push("/device");
+                                }}
+                            >
+                                View
+                            </div>
+                        }
+                    />
+                ))}
+                <div
+                    className="pt-10 text-base text-center text-blue-700"
+                    onClick={() => {
+                        history.push("/device-list/add-device");
+                    }}
+                >
+                    Add New IoT
+                </div>
+            </IonContent>
+        </IonPage>
+    );
 };
