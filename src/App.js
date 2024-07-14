@@ -1,14 +1,14 @@
 import "./App.css";
 import React, { useCallback, useState } from "react";
 import {
-    IonApp,
-    IonRouterOutlet,
-    setupIonicReact,
-    IonTabs,
-    IonTabBar,
-    IonTabButton,
-    IonIcon,
-    IonLabel,
+  IonApp,
+  IonRouterOutlet,
+  setupIonicReact,
+  IonTabs,
+  IonTabBar,
+  IonTabButton,
+  IonIcon,
+  IonLabel,
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Route, Redirect } from "react-router";
@@ -43,147 +43,141 @@ import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import amplifyconfig from "./amplifyconfiguration.json";
 import {
-    BleClient,
-    dataViewToText,
-    textToDataView,
+  BleClient,
+  dataViewToText,
+  textToDataView,
 } from "@capacitor-community/bluetooth-le";
 
 Amplify.configure(amplifyconfig);
 
 function App() {
-    setupIonicReact();
+  setupIonicReact();
 
-    const [connectedDevices, setConnectedDevices] = useState([]);
-    const [selectedDevice, setSelectedDevice] = useState(null);
-    const [intervalId, setIntervalId] = useState(null);
-    const [data, setData] = useState([]);
+  const [connectedDevices, setConnectedDevices] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState(null);
+  const [intervalId, setIntervalId] = useState(null);
+  const [data, setData] = useState([]);
+  const [publishingDevices, setPublishingDevices] = useState([]);
+  const [publishService, setPublishService] = useState({});
 
-    const setLog = useCallback(
-        (d) => {
-            setData([...data, dataViewToText(d)]);
-        },
-        [data]
-    );
+  const publish = useCallback(
+    async (deviceId, serviceId, readId, writeId) => {
+      setPublishService({ serviceId, readId, writeId, deviceId });
+      await BleClient.startNotifications(deviceId, serviceId, readId, (res) => {
+        setData((d) => {
+          console.log("---->data<----", d);
+          console.log("---->res<----", dataViewToText(res));
+          return [...d, dataViewToText(res)];
+        });
+      });
 
-    const publish = useCallback(
-        async (deviceId, serviceId, readId, writeId) => {
-            await BleClient.startNotifications(
-                deviceId,
-                serviceId,
-                readId,
-                setLog
-            );
+      const id = setInterval(async () => {
+        console.log("write");
 
-            const id = setInterval(async () => {
-                console.log("write");
+        await BleClient.write(
+          deviceId,
+          serviceId,
+          writeId,
+          textToDataView("p")
+        );
+      }, 5000);
+      setIntervalId(id);
+    },
+    [data]
+  );
 
-                await BleClient.write(
-                    deviceId,
-                    serviceId,
-                    writeId,
-                    textToDataView("p")
-                );
-            }, 5000);
-            setIntervalId(id);
-        },
-        [setLog]
-    );
+  const clearPublish = useCallback(() => {
+    console.log('CLEAR', intervalId);
+    clearInterval(intervalId);
+  }, [intervalId]);
 
-    const clearPublish = useCallback(() => {
-        clearInterval(intervalId);
-    }, [intervalId]);
+  return (
+    <Authenticator className="mt-10">
+      {({ signOut }) => {
+        return (
+          <IonApp>
+            <IonReactRouter>
+              <IonTabs>
+                <IonRouterOutlet>
+                  <Redirect to="/device-list" />
+                  <Route
+                    path="/device-list"
+                    render={() => (
+                      <DeviceListPage
+                        devices={connectedDevices}
+                        setSelectedDevice={setSelectedDevice}
+                      />
+                    )}
+                    exact={true}
+                  />
+                  <Route
+                    path="/device-list/add-device"
+                    render={() => (
+                      <AddDevicePage
+                        connectedDevices={connectedDevices}
+                        setConnectedDevices={setConnectedDevices}
+                      />
+                    )}
+                    exact={true}
+                  />
+                  <Route
+                    path="/device"
+                    render={() => (
+                      <DevicePage
+                        device={selectedDevice}
+                        publish={publish}
+                        clearPublish={clearPublish}
+                        publishingDevices={publishingDevices}
+                        setPublishingDevices={setPublishingDevices}
+                      />
+                    )}
+                    exact={true}
+                  />
+                  <Route
+                    path="/device/publish-logs"
+                    render={() => (
+                      <PublishLogPage
+                        logs={data}
+                        publishService={publishService}
+                        publishingDevices={publishingDevices}
+                        selectedDevice={selectedDevice}
+                        publish={publish}
+                        clearPublish={clearPublish}
+                        setGlobalData={setData}
+                      />
+                    )}
+                    exact={true}
+                  />
+                  <Route
+                    path="/settings"
+                    render={() => <SettingsPage signOut={signOut} />}
+                    exact={true}
+                  />
+                  <Route
+                    path="/mqtt-test-client"
+                    render={() => <TestMQTTPage />}
+                    exact={true}
+                  />
+                </IonRouterOutlet>
 
-    return (
-        <Authenticator className="mt-10">
-            {({ signOut }) => {
-                return (
-                    <IonApp>
-                        <IonReactRouter>
-                            <IonTabs>
-                                <IonRouterOutlet>
-                                    <Redirect to="/device-list" />
-                                    <Route
-                                        path="/device-list"
-                                        render={() => (
-                                            <DeviceListPage
-                                                devices={connectedDevices}
-                                                setSelectedDevice={
-                                                    setSelectedDevice
-                                                }
-                                            />
-                                        )}
-                                        exact={true}
-                                    />
-                                    <Route
-                                        path="/device-list/add-device"
-                                        render={() => (
-                                            <AddDevicePage
-                                                connectedDevices={
-                                                    connectedDevices
-                                                }
-                                                setConnectedDevices={
-                                                    setConnectedDevices
-                                                }
-                                            />
-                                        )}
-                                        exact={true}
-                                    />
-                                    <Route
-                                        path="/device"
-                                        render={() => (
-                                            <DevicePage
-                                                device={selectedDevice}
-                                                publish={publish}
-                                                clearInterval={clearPublish}
-                                            />
-                                        )}
-                                        exact={true}
-                                    />
-                                    <Route
-                                        path="/device/publish-logs"
-                                        render={() => (
-                                            <PublishLogPage logs={data} />
-                                        )}
-                                        exact={true}
-                                    />
-                                    <Route
-                                        path="/settings"
-                                        render={() => (
-                                            <SettingsPage signOut={signOut} />
-                                        )}
-                                        exact={true}
-                                    />
-                                    <Route
-                                        path="/mqtt-test-client"
-                                        render={() => <TestMQTTPage />}
-                                        exact={true}
-                                    />
-                                </IonRouterOutlet>
+                <IonTabBar slot="bottom">
+                  <IonTabButton tab="device-list" href="/device-list">
+                    <IonIcon icon={phonePortraitOutline} />
+                    <IonLabel>Devices</IonLabel>
+                  </IonTabButton>
 
-                                <IonTabBar slot="bottom">
-                                    <IonTabButton
-                                        tab="device-list"
-                                        href="/device-list"
-                                    >
-                                        <IonIcon icon={phonePortraitOutline} />
-                                        <IonLabel>Devices</IonLabel>
-                                    </IonTabButton>
-
-                                    <IonTabButton
-                                        tab="settings"
-                                        href="/settings"
-                                    >
-                                        <IonIcon icon={cogOutline} />
-                                        <IonLabel>Settings</IonLabel>
-                                    </IonTabButton>
-                                </IonTabBar>
-                            </IonTabs>
-                        </IonReactRouter>
-                    </IonApp>
-                );
-            }}
-        </Authenticator>
-    );
+                  <IonTabButton tab="settings" href="/settings">
+                    <IonIcon icon={cogOutline} />
+                    <IonLabel>Settings</IonLabel>
+                  </IonTabButton>
+                </IonTabBar>
+              </IonTabs>
+            </IonReactRouter>
+          </IonApp>
+        );
+      }}
+    </Authenticator>
+  );
 }
 
 export default App;
