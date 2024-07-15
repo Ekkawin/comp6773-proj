@@ -11,7 +11,7 @@ import {
 } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 import { useHistory, useLocation } from "react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BleClient,
   dataViewToText,
@@ -20,63 +20,52 @@ import {
 import { PublishLogPage } from "./PublishLogPage";
 import qs from "query-string";
 
-export const DevicePage = ({ device, setPublishedDevices }) => {
+export const DevicePage = ({
+  device,
+  setPublishedDevices,
+  setGlobalData,
+  data,
+}) => {
   const [page, setPage] = useState("DevicePage");
-  const [logs, setLogs] = useState([]);
+
   const history = useHistory();
-  // const params = useParams();
   const location = useLocation();
 
-  
-
-  // const { deviceId } = params;
-  const { readId, writeId, intervalId, serviceId,deviceId } = qs.parse(location.search);
-  console.log('intervalId', intervalId)
-
-  // console.log('params', params)
-  console.log('location', location)
-
-  const isChecked = useMemo(()=> intervalId != 0,[intervalId])
-  console.log('isChecked', isChecked)
-
-  const publish = useCallback(
-    async (deviceId, serviceId, readId, writeId) => {
-
-      console.log("deviceId", deviceId);
-      await BleClient.startNotifications(deviceId, serviceId, readId, (res) => {
-        setLogs((prev) => [...prev, dataViewToText(res)]);
-      });
-
-      const intervalId = setInterval(async () => {
-        console.log("write");
-
-        await BleClient.write(deviceId, serviceId, writeId, textToDataView("p"));
-      }, 5000);
-      setPublishedDevices((prev) => [
-        ...prev,
-        { id: deviceId, interval: intervalId },
-      ]);
-      // console.log("deviceId", deviceId);
-      history.replace({
-        search: `serviceId=${serviceId}&readId=${readId}&writeId=${writeId}&intervalId=${intervalId}&deviceId=${deviceId}`
-      });
-    },
-    [history, setPublishedDevices]
+  const { readId, writeId, intervalId, serviceId, deviceId } = qs.parse(
+    location.search
   );
 
-  const clearPublish = useCallback(() => {
-    setPublishedDevices((prev) =>
-      prev.filter((prev) => prev.id !== deviceId)
-    );
+  const isChecked = useMemo(() => intervalId != 0, [intervalId]);
+
+  const publish = async (deviceId, serviceId, readId, writeId) => {
+    await BleClient.startNotifications(deviceId, serviceId, readId, (res) => {
+      setGlobalData((prev) => [...prev, dataViewToText(res)]);
+    });
+
+    const interval = setInterval(async () => {
+      await BleClient.write(deviceId, serviceId, writeId, textToDataView("p"));
+    }, 5000);
+    setPublishedDevices((prev) => [
+      ...prev,
+      { id: deviceId, interval, serviceId, readId, writeId },
+    ]);
+
+    history.replace({
+      search: `serviceId=${serviceId}&readId=${readId}&writeId=${writeId}&intervalId=${interval}&deviceId=${deviceId}`,
+    });
+  };
+
+  const clearPublish = () => {
+    setPublishedDevices((prev) => prev.filter((prev) => prev.id !== deviceId));
     clearInterval(intervalId);
     history.replace({
-      search: `serviceId=${serviceId}&readId=${readId}&writeId=${writeId}&intervalId=0&deviceId=${deviceId}`
+      search: `serviceId=${serviceId}&readId=${readId}&writeId=${writeId}&intervalId=0&deviceId=${deviceId}`,
     });
-  }, [intervalId, history, readId,writeId,setPublishedDevices,serviceId,deviceId]);
+  };
 
   switch (page) {
     case "PublishLogPage":
-      return <PublishLogPage logs={logs} setPage={setPage} />;
+      return <PublishLogPage logs={data} setPage={setPage} />;
     default:
       return (
         <IonPage>
@@ -103,10 +92,9 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
                   checked={isChecked}
                   onIonChange={async (e) => {
                     if (e.detail.checked) {
-                      
                       publish(deviceId, serviceId, readId, writeId);
                     } else {
-                      clearPublish()
+                      clearPublish();
                     }
                   }}
                 />
@@ -116,7 +104,7 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
               <div>Publish Log</div>
               <div
                 onClick={() => {
-                  setPage("PublishLogPage")
+                  setPage("PublishLogPage");
                 }}
               >
                 View
@@ -141,4 +129,3 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
       );
   }
 };
-

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, createContext } from "react";
 
 import {
   IonItem,
@@ -13,7 +13,11 @@ import {
 } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 
-export const PublishLogPage = ({ logs,setPage }) => {
+export const PublishLogContext = createContext([]);
+
+export const PublishLogPage = ({ logs, setPage }) => {
+  const data = useContext(PublishLogContext);
+
   return (
     <IonPage>
       <IonHeader translucent={true}>
@@ -23,13 +27,16 @@ export const PublishLogPage = ({ logs,setPage }) => {
       </IonHeader>
       <IonContent fullscreen={true}>
         <IonHeader collapse="condense">
-        <IonButtons collapse={true} slot="start">
-              <IonButton onClick={()=>{
-                setPage("DevicePage")
-              }}>{"< Device"}</IonButton>
-            </IonButtons>
+          <IonButtons collapse={true} slot="start">
+            <IonButton
+              onClick={() => {
+                setPage("DevicePage");
+              }}
+            >
+              {"< Device"}
+            </IonButton>
+          </IonButtons>
           <IonToolbar>
-            
             <IonTitle size="large">Publish logs</IonTitle>
           </IonToolbar>
         </IonHeader>
@@ -37,8 +44,8 @@ export const PublishLogPage = ({ logs,setPage }) => {
         <IonSearchbar></IonSearchbar>
 
         <SubTitle>Logs</SubTitle>
-        {logs.map((data) => (
-          <div>{data}</div>
+        {data.map((d) => (
+          <div>{d}</div>
         ))}
         <div className="pt-10 text-base text-center text-blue-700">
           Press to Refresh

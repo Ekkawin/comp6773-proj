@@ -46,21 +46,16 @@ export const DeviceListPage = ({
                 onClick={() => {
                     console.log("CLICK");
                   const interval = (() => {
-                    console.log('publishedDevices', publishedDevices)
                     const publishedDevice = publishedDevices?.find(
                       ({ id }) => id === device.id
                     );
-                    console.log('device---->', publishedDevice)
                     if (publishedDevice){
-                        console.log('device---->', publishedDevice)
                         return publishedDevice.interval
                     }else{
                         return 0
                     }
                   })();
                   setSelectedDevice(device);
-                  console.log('device.id', device.id)
-                  console.log('interval', interval)
                   history.push(
                     `/device/${device.id}?serviceId=${device.service.id}&readId=${device.service.readId}&writeId=${device.service.writeId}&intervalId=${interval}&deviceId=${device.id}`
                   );
