@@ -24,8 +24,7 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
   const getBle = useCallback(async () => {
     let devices = [];
     const connectedNames = connectedDevices.map(({ name }) => name);
-    await BleClient.initialize();
-
+    
     await BleClient.requestLEScan({}, (result) => {
       if (result.device?.name) {
         const isExist = devices.some(({ name }) => {

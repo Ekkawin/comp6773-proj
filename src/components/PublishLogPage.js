@@ -1,7 +1,6 @@
 import React, { useContext, createContext } from "react";
 
 import {
-  IonItem,
   IonSearchbar,
   IonContent,
   IonHeader,
