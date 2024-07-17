@@ -1,4 +1,4 @@
-import React, { useContext, createContext } from "react";
+import React, { useContext, createContext, useMemo } from "react";
 
 import {
   IonSearchbar,
@@ -11,11 +11,28 @@ import {
   IonButton,
 } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
+import { useLocation } from "react-router";
+import qs from "query-string";
 
 export const PublishLogContext = createContext([]);
 
-export const PublishLogPage = ({ logs, setPage }) => {
+export const PublishLogPage = ({ setPage }) => {
   const data = useContext(PublishLogContext);
+  console.log("data", data);
+
+  const location = useLocation();
+  const {deviceId} = qs.parse(location.search)
+  console.log('deviceId', deviceId)
+
+  const logs = useMemo(() => {
+    const l = data.find(({ id }) => id === deviceId);
+
+    if (l) {
+      return l.logs;
+    }
+
+    return [];
+  }, [deviceId, data]);
 
   return (
     <IonPage>
@@ -43,7 +60,7 @@ export const PublishLogPage = ({ logs, setPage }) => {
         <IonSearchbar></IonSearchbar>
 
         <SubTitle>Logs</SubTitle>
-        {data.map((d) => (
+        {logs.map((d) => (
           <div>{d}</div>
         ))}
         <div className="pt-10 text-base text-center text-blue-700">

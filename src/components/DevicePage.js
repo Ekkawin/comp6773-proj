@@ -14,18 +14,12 @@ import { useHistory, useLocation } from "react-router";
 import { useMemo, useState } from "react";
 import {
   BleClient,
-  dataViewToText,
   textToDataView,
 } from "@capacitor-community/bluetooth-le";
 import { PublishLogPage } from "./PublishLogPage";
 import qs from "query-string";
 
-export const DevicePage = ({
-  device,
-  setPublishedDevices,
-  setGlobalData,
-  data,
-}) => {
+export const DevicePage = ({ device, setPublishedDevices }) => {
   const [page, setPage] = useState("DevicePage");
 
   const history = useHistory();
@@ -38,10 +32,6 @@ export const DevicePage = ({
   const isChecked = useMemo(() => intervalId != 0, [intervalId]);
 
   const publish = async (deviceId, serviceId, readId, writeId) => {
-    await BleClient.startNotifications(deviceId, serviceId, readId, (res) => {
-      setGlobalData((prev) => [...prev, dataViewToText(res)]);
-    });
-
     const interval = setInterval(async () => {
       await BleClient.write(deviceId, serviceId, writeId, textToDataView("p"));
     }, 5000);
@@ -65,7 +55,7 @@ export const DevicePage = ({
 
   switch (page) {
     case "PublishLogPage":
-      return <PublishLogPage logs={data} setPage={setPage} />;
+      return <PublishLogPage setPage={setPage} />;
     default:
       return (
         <IonPage>

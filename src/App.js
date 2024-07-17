@@ -68,7 +68,17 @@ function App() {
   useEffect(() => {
     publishedDevices?.forEach(({ id, serviceId, readId }) => {
       BleClient.startNotifications(id, serviceId, readId, (res) => {
-        setData((prev) => [...prev, dataViewToText(res)]);
+        setData((prev) => {
+          const deviceData = prev.find(({ id: deviceId }) => deviceId === id);
+          if (deviceData) {
+            deviceData.logs.push(dataViewToText(res));
+            const _prev = prev.filter(({ id: deviceId }) => deviceId !== id);
+
+            return [..._prev, deviceData];
+          }
+
+          return [...prev, {id, logs:[dataViewToText(res)]}]
+        });
       });
     });
 
@@ -116,8 +126,6 @@ function App() {
                         <DevicePage
                           device={selectedDevice}
                           setPublishedDevices={setPublishedDevices}
-                          setGlobalData={setData}
-                          data={data}
                         />
                       )}
                       exact={true}
