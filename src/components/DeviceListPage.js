@@ -7,6 +7,11 @@ import {
   IonTitle,
   IonToolbar,
   IonPage,
+  IonItem,
+  IonIcon,
+  IonLabel,
+  IonNote,
+  IonList,
 } from "@ionic/react";
 
 import { SubTitle } from "./Subtitle";
@@ -15,8 +20,6 @@ import { useHistory } from "react-router";
 
 export const DeviceListPage = ({
   devices,
-  setSelectedDevice,
-  publishedDevices,
 }) => {
   const history = useHistory();
 
@@ -38,34 +41,22 @@ export const DeviceListPage = ({
         <IonSearchbar></IonSearchbar>
 
         <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
-        {devices.map((device) => (
-          <BluetoothItem
-            name={device.name}
-            icon={
-              <div
-                onClick={() => {
-                    console.log("CLICK");
-                  const interval = (() => {
-                    const publishedDevice = publishedDevices?.find(
-                      ({ id }) => id === device.id
-                    );
-                    if (publishedDevice){
-                        return publishedDevice.interval
-                    }else{
-                        return 0
-                    }
-                  })();
-                  setSelectedDevice(device);
-                  history.push(
-                    `/device/${device.id}?serviceId=${device.service.id}&readId=${device.service.readId}&writeId=${device.service.writeId}&intervalId=${interval}&deviceId=${device.id}`
-                  );
-                }}
-              >
-                View
-              </div>
-            }
-          />
-        ))}
+        <IonList>
+          {devices?.map((device) => (
+            <IonItem
+              button={true}
+              onClick={() => {
+                history.push(
+                  `/device/${device.id}?serviceId=${device.service.id}&readId=${device.service.readId}&writeId=${device.service.writeId}&intervalId=${device.interval}&deviceId=${device.id}`
+                );
+              }}
+            >
+              <IonLabel>{device.name}</IonLabel>
+              <IonNote slot="end">View</IonNote>
+            </IonItem>
+
+          ))}
+        </IonList>
         <div
           className="pt-10 text-base text-center text-blue-700"
           onClick={() => {

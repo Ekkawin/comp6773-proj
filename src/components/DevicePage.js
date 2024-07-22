@@ -8,18 +8,17 @@ import {
   IonTitle,
   IonToolbar,
   IonPage,
+  IonLabel,
+  IonNote,
 } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 import { useHistory, useLocation } from "react-router";
 import { useMemo, useState } from "react";
-import {
-  BleClient,
-  textToDataView,
-} from "@capacitor-community/bluetooth-le";
-import { PublishLogPage } from "./PublishLogPage";
+import { BleClient, textToDataView } from "@capacitor-community/bluetooth-le";
+import { DataLogPage } from "./DataLogPage";
 import qs from "query-string";
 
-export const DevicePage = ({ device, setPublishedDevices }) => {
+export const DevicePage = ({ device, setConnectedDevices }) => {
   const [page, setPage] = useState("DevicePage");
 
   const history = useHistory();
@@ -35,10 +34,13 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
     const interval = setInterval(async () => {
       await BleClient.write(deviceId, serviceId, writeId, textToDataView("p"));
     }, 5000);
-    setPublishedDevices((prev) => [
-      ...prev,
-      { id: deviceId, interval, serviceId, readId, writeId },
-    ]);
+    setConnectedDevices((prev) => {
+      const device = prev.find((device) => device.id === deviceId);
+      return [
+        ...prev.filter(({ id }) => id !== deviceId),
+        { ...device, interval },
+      ];
+    });
 
     history.replace({
       search: `serviceId=${serviceId}&readId=${readId}&writeId=${writeId}&intervalId=${interval}&deviceId=${deviceId}`,
@@ -46,7 +48,13 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
   };
 
   const clearPublish = () => {
-    setPublishedDevices((prev) => prev.filter((prev) => prev.id !== deviceId));
+    setConnectedDevices((prev) => {
+      const device = prev.find((device) => device.id === deviceId);
+      return [
+        ...prev.filter(({ id }) => id !== deviceId),
+        { ...device, interval: 0 },
+      ];
+    });
     clearInterval(intervalId);
     history.replace({
       search: `serviceId=${serviceId}&readId=${readId}&writeId=${writeId}&intervalId=0&deviceId=${deviceId}`,
@@ -54,8 +62,8 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
   };
 
   switch (page) {
-    case "PublishLogPage":
-      return <PublishLogPage setPage={setPage} />;
+    case "DataLogPage":
+      return <DataLogPage setPage={setPage} />;
     default:
       return (
         <IonPage>
@@ -73,35 +81,42 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
             </IonHeader>
             <IonSearchbar></IonSearchbar>
 
-            <SubTitle>DEVICE MQTT PUBLISHING</SubTitle>
+            <SubTitle>DEVICE Data</SubTitle>
             <IonItem>
-              <div className="flex justify-between items-center w-full">
-                <div>Enable Publishing</div>
-                <IonToggle
-                  justify="end"
-                  checked={isChecked}
-                  onIonChange={async (e) => {
-                    if (e.detail.checked) {
-                      publish(deviceId, serviceId, readId, writeId);
-                    } else {
-                      clearPublish();
-                    }
-                  }}
-                />
-              </div>
+              <IonLabel>Enable Data</IonLabel>
+              <IonToggle
+                justify="end"
+                checked={isChecked}
+                onIonChange={async (e) => {
+                  if (e.detail.checked) {
+                    publish(deviceId, serviceId, readId, writeId);
+                  } else {
+                    clearPublish();
+                  }
+                }}
+              ></IonToggle>
             </IonItem>
-            <div className="px-4 pt-2 flex justify-between items-center w-full">
-              <div>Publish Log</div>
+            <IonItem
+              button={true}
+              onClick={() => {
+                setPage("DataLogPage");
+              }}
+            >
+              <IonLabel>Data Log</IonLabel>
+              <IonNote slot="end">View</IonNote>
+            </IonItem>
+            {/* <div className="px-4 pt-2 flex justify-between items-center w-full">
+              <div>Data Log</div>
               <div
                 onClick={() => {
-                  setPage("PublishLogPage");
+                  setPage("DataLogPage");
                 }}
               >
                 View
               </div>
-            </div>
+            </div> */}
 
-            <div className="pt-10">
+            {/* <div className="pt-10">
               <SubTitle>DEVICE MQTT SUBSCRIBING</SubTitle>
               <IonItem>
                 <div className="flex justify-between items-center w-full">
@@ -113,7 +128,7 @@ export const DevicePage = ({ device, setPublishedDevices }) => {
                 <div>Subscription Log</div>
                 <div>View</div>
               </div>
-            </div>
+            </div> */}
           </IonContent>
         </IonPage>
       );

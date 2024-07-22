@@ -30,9 +30,9 @@ function TestMQTTPage() {
     const [messages, setMessages] = useState([]);
     const mqttClient = useMemo(() => {
         return new PubSub({
-            region: "ap-southeast-2",
+            region: "us-east-1",
             endpoint:
-                "wss://aibmybrjyb7gc-ats.iot.ap-southeast-2.amazonaws.com/mqtt",
+                "wss://a3fy4j0hgwqqs8-ats.iot.us-east-1.amazonaws.com/mqtt",
         });
     }, []);
 

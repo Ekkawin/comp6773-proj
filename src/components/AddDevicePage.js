@@ -84,7 +84,7 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
 
       setConnectedDevices([
         ...connectedDevices,
-        { id, name, service: {id: serviceId, readId, writeId}  },
+        { id, name, service: {id: serviceId, readId, writeId}, interval:0 },
       ]);
       history.push("/device-list");
     },

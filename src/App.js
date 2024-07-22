@@ -1,5 +1,11 @@
 import "./App.css";
-import React, { createContext, useCallback, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   IonApp,
   IonRouterOutlet,
@@ -17,9 +23,9 @@ import { phonePortraitOutline, cogOutline } from "ionicons/icons";
 import { DeviceListPage } from "./components/DeviceListPage";
 import { AddDevicePage } from "./components/AddDevicePage";
 import { DevicePage } from "./components/DevicePage";
-import { PublishLogContext } from "./components/PublishLogPage";
 import SettingsPage from "./components/SettingsPage";
-import TestMQTTPage from "./components/TestMQTTPage";
+import { MQTTPage } from "./components/MQTTPage";
+import { PublishLogContext } from "./context";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -43,31 +49,42 @@ import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import amplifyconfig from "./amplifyconfiguration.json";
 import { BleClient, dataViewToText } from "@capacitor-community/bluetooth-le";
+import { PubSub } from "@aws-amplify/pubsub";
+import TestMQTTPage from "./components/TestMQTTPage";
 
 Amplify.configure(amplifyconfig);
 
 function App() {
   setupIonicReact();
 
-  // const [connectedDevices, setConnectedDevices] = useState([
-  //   {
-  //     name: "1",
-  //     id: "1231231283912",
-  //     service: { id: "123sadf", readId: "sdfg234", writeId: "123sdf234" },
-  //   },
-  // ]);
-  const [connectedDevices, setConnectedDevices] = useState([]);
-  const [selectedDevice, setSelectedDevice] = useState(null);
+  const [connectedDevices, setConnectedDevices] = useState([
+    {
+      name: "1",
+      id: "1231231283912",
+      isReceivingData: false,
+      topic: null,
+      service: { id: "123sadf", readId: "sdfg234", writeId: "123sdf234" },
+    },
+  ]);
+
   const [data, setData] = useState([]);
-  const [publishedDevices, setPublishedDevices] = useState([]);
+  const [messages, setMessages] = useState([]);
+
+  const mqttClient = useMemo(() => {
+    return new PubSub({
+      region: "us-east-1",
+      endpoint: "wss://a3fy4j0hgwqqs8-ats.iot.us-east-1.amazonaws.com/mqtt",
+    });
+  }, []);
 
   useEffect(() => {
     BleClient.initialize();
   }, []);
 
   useEffect(() => {
-    publishedDevices?.forEach(({ id, serviceId, readId }) => {
-      BleClient.startNotifications(id, serviceId, readId, (res) => {
+    console.log("connectedDevices", connectedDevices);
+    connectedDevices?.forEach(({ id, service, topic }) => {
+      BleClient.startNotifications(id, service.id, service.readId, (res) => {
         setData((prev) => {
           const deviceData = prev.find(({ id: deviceId }) => deviceId === id);
           if (deviceData) {
@@ -77,24 +94,48 @@ function App() {
             return [..._prev, deviceData];
           }
 
-          return [...prev, {id, logs:[dataViewToText(res)]}]
+          return [...prev, { id, logs: [dataViewToText(res)] }];
         });
+
+        if (topic) {
+          // mqttClient.publish({
+          //   topics: topic,
+          //   message: { msg: dataViewToText(res) },
+          // });
+          setMessages((prev) => {
+            const next = structuredClone(prev);
+            next.push({
+              message: dataViewToText(res),
+              received: new Date(),
+              topic,
+            });
+            return next;
+          });
+        }
       });
     });
 
     return () => {
-      publishedDevices?.forEach(({ id, serviceId, readId }) => {
-        BleClient.stopNotifications(id, serviceId, readId);
+      connectedDevices?.forEach(({ id, service }) => {
+        BleClient.stopNotifications(id, service.id, service.readId);
       });
     };
-  }, [publishedDevices]);
+  }, [connectedDevices, mqttClient]);
 
   return (
     <Authenticator className="mt-10">
       {({ signOut }) => {
         return (
           <IonApp>
-            <PublishLogContext.Provider value={data}>
+            <PublishLogContext.Provider
+              value={{
+                data,
+                connectedDevices,
+                setConnectedDevices,
+                messages,
+                setMessages,
+              }}
+            >
               <IonReactRouter>
                 <IonTabs>
                   <IonRouterOutlet>
@@ -102,11 +143,7 @@ function App() {
                     <Route
                       path="/device-list"
                       render={() => (
-                        <DeviceListPage
-                          devices={connectedDevices}
-                          setSelectedDevice={setSelectedDevice}
-                          publishedDevices={publishedDevices}
-                        />
+                        <DeviceListPage devices={connectedDevices} />
                       )}
                       exact={true}
                     />
@@ -124,8 +161,8 @@ function App() {
                       path="/device/:deviceId"
                       render={() => (
                         <DevicePage
-                          device={selectedDevice}
-                          setPublishedDevices={setPublishedDevices}
+                          device={connectedDevices}
+                          setConnectedDevices={setConnectedDevices}
                         />
                       )}
                       exact={true}
@@ -135,9 +172,18 @@ function App() {
                       render={() => <SettingsPage signOut={signOut} />}
                       exact={true}
                     />
+                    {/* <Route
+                      path="/mqtt-test-client"
+                      render={() => (
+                        <TestMQTTPage setConnectedDevices={setConnectedDevices} />
+                      )}
+                      exact={true}
+                    /> */}
                     <Route
                       path="/mqtt-test-client"
-                      render={() => <TestMQTTPage />}
+                      render={() => (
+                        <MQTTPage setConnectedDevices={setConnectedDevices} />
+                      )}
                       exact={true}
                     />
                   </IonRouterOutlet>
