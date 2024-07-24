@@ -6,7 +6,6 @@ import {
   IonHeader,
   IonIcon,
   IonPage,
-  IonSearchbar,
   IonSpinner,
   IonTitle,
   IonToolbar,
@@ -24,12 +23,11 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
   const getBle = useCallback(async () => {
     let devices = [];
     const connectedNames = connectedDevices.map(({ name }) => name);
-    
+
     await BleClient.requestLEScan({}, (result) => {
       if (result.device?.name) {
         const isExist = devices.some(({ name }) => {
           return name === result.device?.name && !connectedNames.include(name);
-          // return name === result.device?.name;
         });
 
         if (!isExist) {
@@ -38,8 +36,6 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
             name: result.device.name,
             rssi: result.rssi,
           });
-          console.log("<--FOUND-->", result);
-          console.log("<--Service Data-->", result.serviceData);
         }
       }
     });
@@ -72,7 +68,7 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
   const connectDevice = useCallback(
     async (id, name) => {
       await BleClient.connect(id);
-      
+
       const services = await BleClient.getServices(id);
       const serviceId = services[0].uuid;
       const readId = services[0].characteristics.find(
@@ -84,7 +80,7 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
 
       setConnectedDevices([
         ...connectedDevices,
-        { id, name, service: {id: serviceId, readId, writeId}, interval:0 },
+        { id, name, service: { id: serviceId, readId, writeId }, interval: 0 },
       ]);
       history.push("/device-list");
     },
@@ -101,8 +97,6 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
     }
   }, [logDeviceInfo]);
 
-  console.log("Device ---->", bleDevices);
-
   return (
     <IonPage>
       <IonHeader translucent={true}>
@@ -110,7 +104,6 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
           <IonTitle>Add new device</IonTitle>
         </IonToolbar>
       </IonHeader>
-      <IonSearchbar></IonSearchbar>
       <IonContent fullscreen={true}>
         <IonHeader collapse="condense">
           <IonToolbar>

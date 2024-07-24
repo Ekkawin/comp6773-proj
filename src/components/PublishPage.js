@@ -11,9 +11,12 @@ import {
   IonButtons,
   IonButton,
   IonToggle,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
 } from "@ionic/react";
 import React, { useContext, useMemo, useState } from "react";
-import { SubTitle } from "./Subtitle";
 import { PublishLogContext } from "../context";
 
 export const PublishPage = ({ setPage, selectedDeviceId }) => {
@@ -96,10 +99,20 @@ export const PublishPage = ({ setPage, selectedDeviceId }) => {
           </IonItem>
         </IonList>
 
-        <SubTitle>Logs</SubTitle>
-        {logs.map((d) => (
-          <div>{d}</div>
-        ))}
+        <IonCard color="light">
+          <IonCardHeader>
+            <IonCardTitle>Logs</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent color="light">
+            <IonList color="light" inset lines="none">
+              {logs.map((d) => (
+                <IonItem color="light">
+                  <IonLabel>{d}</IonLabel>
+                </IonItem>
+              ))}
+            </IonList>
+          </IonCardContent>
+        </IonCard>
       </IonContent>
     </IonPage>
   );

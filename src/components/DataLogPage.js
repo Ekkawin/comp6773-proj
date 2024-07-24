@@ -1,16 +1,20 @@
 import React, { useContext, useMemo } from "react";
 import {
-  IonSearchbar,
   IonContent,
   IonHeader,
   IonTitle,
   IonToolbar,
   IonPage,
   IonButtons,
-  IonButton,
   IonBackButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonList,
+  IonItem,
+  IonLabel,
 } from "@ionic/react";
-import { SubTitle } from "./Subtitle";
 import { useLocation } from "react-router";
 import qs from "query-string";
 import { PublishLogContext } from "../context";
@@ -37,13 +41,13 @@ export const DataLogPage = ({ setPage }) => {
     <IonPage>
       <IonHeader translucent={true}>
         <IonToolbar>
-          <IonButtons
-            slot="start"
-           
-          >
-            <IonBackButton defaultHref="#"  onClick={() => {
-              setPage("DevicePage");
-            }}></IonBackButton>
+          <IonButtons slot="start">
+            <IonBackButton
+              defaultHref="#"
+              onClick={() => {
+                setPage("DevicePage");
+              }}
+            ></IonBackButton>
           </IonButtons>
           <IonTitle>Data logs</IonTitle>
         </IonToolbar>
@@ -55,15 +59,20 @@ export const DataLogPage = ({ setPage }) => {
           </IonToolbar>
         </IonHeader>
 
-        <IonSearchbar></IonSearchbar>
-
-        <SubTitle>Logs</SubTitle>
-        {logs.map((d) => (
-          <div>{d}</div>
-        ))}
-        <div className="pt-10 text-base text-center text-blue-700">
-          Press to Refresh
-        </div>
+        <IonCard color="light">
+          <IonCardHeader>
+            <IonCardTitle>Logs</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent color="light">
+            <IonList color="light" inset lines="none">
+              {logs.map((d) => (
+                <IonItem color="light">
+                  <IonLabel>{d}</IonLabel>
+                </IonItem>
+              ))}
+            </IonList>
+          </IonCardContent>
+        </IonCard>
       </IonContent>
     </IonPage>
   );
