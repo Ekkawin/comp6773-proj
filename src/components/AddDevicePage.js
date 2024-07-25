@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Device } from "@capacitor/device";
 import {
@@ -14,11 +14,14 @@ import { SubTitle } from "./Subtitle";
 import { BluetoothItem } from "./BluetoothItem";
 import { addOutline } from "ionicons/icons";
 import { useHistory } from "react-router";
+import { PublishLogContext } from "../context";
 
-export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
+export const AddDevicePage = () => {
   const [bleDevices, setBleDevice] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const history = useHistory();
+
+  const {connectedDevices, setConnectedDevices} = useContext(PublishLogContext)
 
   const getBle = useCallback(async () => {
     let devices = [];
@@ -67,7 +70,11 @@ export const AddDevicePage = ({ connectedDevices, setConnectedDevices }) => {
 
   const connectDevice = useCallback(
     async (id, name) => {
-      await BleClient.connect(id);
+      await BleClient.connect(id, (deviceId) => {
+        setConnectedDevices((prev) => prev.filter((device)=> device.id !== deviceId))
+        window.location.reload()
+
+      });
 
       const services = await BleClient.getServices(id);
       const serviceId = services[0].uuid;

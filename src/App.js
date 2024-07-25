@@ -18,7 +18,7 @@ import {
 } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Route, Redirect } from "react-router";
-import { phonePortraitOutline, cogOutline,cloudOutline } from "ionicons/icons";
+import { phonePortraitOutline, cogOutline, cloudOutline } from "ionicons/icons";
 
 import { DeviceListPage } from "./components/DeviceListPage";
 import { AddDevicePage } from "./components/AddDevicePage";
@@ -149,12 +149,7 @@ function App() {
                     />
                     <Route
                       path="/device-list/add-device"
-                      render={() => (
-                        <AddDevicePage
-                          connectedDevices={connectedDevices}
-                          setConnectedDevices={setConnectedDevices}
-                        />
-                      )}
+                      render={() => <AddDevicePage />}
                       exact={true}
                     />
                     <Route
@@ -181,9 +176,7 @@ function App() {
                     /> */}
                     <Route
                       path="/mqtt-test-client"
-                      render={() => (
-                        <MQTTPage/>
-                      )}
+                      render={() => <MQTTPage />}
                       exact={true}
                     />
                   </IonRouterOutlet>
@@ -193,7 +186,7 @@ function App() {
                       <IonIcon icon={phonePortraitOutline} />
                       <IonLabel>Devices</IonLabel>
                     </IonTabButton>
-                    
+
                     <IonTabButton tab="aws-cloud" href="/mqtt-test-client">
                       <IonIcon icon={cloudOutline} />
                       <IonLabel>Cloud</IonLabel>
