@@ -51,6 +51,7 @@ import amplifyconfig from "./amplifyconfiguration.json";
 import { BleClient, dataViewToText } from "@capacitor-community/bluetooth-le";
 import { PubSub } from "@aws-amplify/pubsub";
 import TestMQTTPage from "./components/TestMQTTPage";
+import { PublishPage } from "./components/PublishPage";
 
 Amplify.configure(amplifyconfig);
 
@@ -72,8 +73,8 @@ function App() {
 
   const mqttClient = useMemo(() => {
     return new PubSub({
-      region: "us-east-1",
-      endpoint: "wss://a3fy4j0hgwqqs8-ats.iot.us-east-1.amazonaws.com/mqtt",
+      region: "ap-southeast-2",
+      endpoint: "wss://aibmybrjyb7gc-ats.iot.ap-southeast-2.amazonaws.com/mqtt",
     });
   }, []);
 
@@ -98,10 +99,11 @@ function App() {
         });
 
         if (topic) {
-          // mqttClient.publish({
-          //   topics: topic,
-          //   message: { msg: dataViewToText(res) },
-          // });
+          mqttClient.publish({
+            topics: topic,
+            message: { msg: dataViewToText(res) },
+          });
+          console.log("topic", topic, new Date());
           setMessages((prev) => {
             const next = structuredClone(prev);
             next.push({
@@ -142,9 +144,7 @@ function App() {
                     <Redirect to="/device-list" />
                     <Route
                       path="/device-list"
-                      render={() => (
-                        <DeviceListPage devices={connectedDevices} />
-                      )}
+                      render={() => <DeviceListPage />}
                       exact={true}
                     />
                     <Route
@@ -153,13 +153,8 @@ function App() {
                       exact={true}
                     />
                     <Route
-                      path="/device/:deviceId"
-                      render={() => (
-                        <DevicePage
-                          device={connectedDevices}
-                          setConnectedDevices={setConnectedDevices}
-                        />
-                      )}
+                      path="/device-list/device/:deviceId"
+                      render={() => <DevicePage />}
                       exact={true}
                     />
                     <Route
@@ -170,13 +165,20 @@ function App() {
                     {/* <Route
                       path="/mqtt-test-client"
                       render={() => (
-                        <TestMQTTPage setConnectedDevices={setConnectedDevices} />
+                        <TestMQTTPage
+                          setConnectedDevices={setConnectedDevices}
+                        />
                       )}
                       exact={true}
                     /> */}
                     <Route
                       path="/mqtt-test-client"
                       render={() => <MQTTPage />}
+                      exact={true}
+                    />
+                    <Route
+                      path="/mqtt-test-client/:deviceId"
+                      render={() => <PublishPage />}
                       exact={true}
                     />
                   </IonRouterOutlet>

@@ -8,8 +8,6 @@ import {
   IonTitle,
   IonToolbar,
   IonPage,
-  IonButtons,
-  IonButton,
   IonToggle,
   IonCard,
   IonCardHeader,
@@ -18,8 +16,16 @@ import {
 } from "@ionic/react";
 import React, { useContext, useMemo, useState } from "react";
 import { PublishLogContext } from "../context";
+import { useLocation } from "react-router";
+import qs from "query-string";
 
-export const PublishPage = ({ setPage, selectedDeviceId }) => {
+export const PublishPage = () => {
+
+  const location = useLocation();
+
+  const { deviceId:selectedDeviceId} = qs.parse(
+    location.search
+  );
   const [publishTopic, setPublishTopic] = useState("");
 
   const { connectedDevices, setConnectedDevices, data } =
@@ -49,15 +55,6 @@ export const PublishPage = ({ setPage, selectedDeviceId }) => {
       </IonHeader>
       <IonContent fullscreen={true}>
         <IonHeader collapse="condense">
-          <IonButtons collapse={true} slot="start">
-            <IonButton
-              onClick={() => {
-                setPage("DevicePage");
-              }}
-            >
-              {"< Device"}
-            </IonButton>
-          </IonButtons>
           <IonToolbar>
             <IonTitle size="large">Publish logs</IonTitle>
           </IonToolbar>

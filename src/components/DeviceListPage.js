@@ -1,5 +1,3 @@
-/** @jsxImportSource @emotion/react */
-
 import {
   IonSearchbar,
   IonContent,
@@ -8,20 +6,20 @@ import {
   IonToolbar,
   IonPage,
   IonItem,
-  IonIcon,
   IonLabel,
   IonNote,
   IonList,
 } from "@ionic/react";
 
 import { SubTitle } from "./Subtitle";
-import { BluetoothItem } from "./BluetoothItem";
-import { useHistory } from "react-router";
+import React, { useHistory } from "react-router";
+import { useContext } from "react";
+import { PublishLogContext } from "../context";
 
-export const DeviceListPage = ({
-  devices,
-}) => {
+export const DeviceListPage = () => {
   const history = useHistory();
+
+  const {connectedDevices: devices} = useContext(PublishLogContext)
 
   return (
     <IonPage>
@@ -47,7 +45,7 @@ export const DeviceListPage = ({
               button={true}
               onClick={() => {
                 history.push(
-                  `/device/${device.id}?serviceId=${device.service.id}&readId=${device.service.readId}&writeId=${device.service.writeId}&intervalId=${device.interval}&deviceId=${device.id}`
+                  `/device-list/device/${device.id}?serviceId=${device.service.id}&readId=${device.service.readId}&writeId=${device.service.writeId}&intervalId=${device.interval}&deviceId=${device.id}`
                 );
               }}
             >

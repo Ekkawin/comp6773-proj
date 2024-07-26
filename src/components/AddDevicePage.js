@@ -72,6 +72,7 @@ export const AddDevicePage = () => {
     async (id, name) => {
       await BleClient.connect(id, (deviceId) => {
         setConnectedDevices((prev) => prev.filter((device)=> device.id !== deviceId))
+        history.push("/device-list");
         window.location.reload()
 
       });

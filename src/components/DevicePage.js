@@ -1,4 +1,3 @@
-/** @jsxImportSource @emotion/react */
 import {
   IonItem,
   IonSearchbar,
@@ -12,14 +11,18 @@ import {
   IonNote,
 } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
-import { useHistory, useLocation } from "react-router";
-import { useMemo, useState } from "react";
+import React, { useHistory, useLocation } from "react-router";
+import { useMemo, useState, useContext } from "react";
 import { BleClient, textToDataView } from "@capacitor-community/bluetooth-le";
 import { DataLogPage } from "./DataLogPage";
+import { PublishLogContext } from "../context";
 import qs from "query-string";
 
-export const DevicePage = ({ device, setConnectedDevices }) => {
+export const DevicePage = () => {
   const [page, setPage] = useState("DevicePage");
+
+  const { connectedDevices, setConnectedDevices } =
+    useContext(PublishLogContext);
 
   const history = useHistory();
   const location = useLocation();
@@ -29,6 +32,11 @@ export const DevicePage = ({ device, setConnectedDevices }) => {
   );
 
   const isChecked = useMemo(() => intervalId != 0, [intervalId]);
+
+  const device = useMemo(
+    () => connectedDevices?.find(({ id }) => id === deviceId),
+    [connectedDevices, deviceId]
+  );
 
   const publish = async (deviceId, serviceId, readId, writeId) => {
     const interval = setInterval(async () => {
@@ -72,7 +80,6 @@ export const DevicePage = ({ device, setConnectedDevices }) => {
               <IonTitle>{device?.name || "Device 1"}</IonTitle>
             </IonToolbar>
           </IonHeader>
-
           <IonContent fullscreen={true}>
             <IonHeader collapse="condense">
               <IonToolbar>
@@ -105,30 +112,6 @@ export const DevicePage = ({ device, setConnectedDevices }) => {
               <IonLabel>Data Log</IonLabel>
               <IonNote slot="end">View</IonNote>
             </IonItem>
-            {/* <div className="px-4 pt-2 flex justify-between items-center w-full">
-              <div>Data Log</div>
-              <div
-                onClick={() => {
-                  setPage("DataLogPage");
-                }}
-              >
-                View
-              </div>
-            </div> */}
-
-            {/* <div className="pt-10">
-              <SubTitle>DEVICE MQTT SUBSCRIBING</SubTitle>
-              <IonItem>
-                <div className="flex justify-between items-center w-full">
-                  <div className="w-full">Enable Subscribing</div>
-                  <IonToggle />
-                </div>
-              </IonItem>
-              <div className="px-4 pt-2 flex justify-between items-center w-full">
-                <div>Subscription Log</div>
-                <div>View</div>
-              </div>
-            </div> */}
           </IonContent>
         </IonPage>
       );

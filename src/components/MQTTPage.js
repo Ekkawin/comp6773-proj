@@ -19,6 +19,7 @@ import {
 import { useContext, useMemo, useState } from "react";
 import { PublishLogContext } from "../context";
 import { PublishPage } from "./PublishPage";
+import { useHistory } from "react-router";
 
 export const MQTTPage = () => {
   const [present] = useIonToast();
@@ -26,16 +27,16 @@ export const MQTTPage = () => {
     topic: "",
   });
   const [subscribedTopics, setSubscribedTopics] = useState([]);
-  const [page, setPage] = useState("MQTTPage");
-  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
 
   const { connectedDevices, messages, setMessages } =
     useContext(PublishLogContext);
 
+  const history = useHistory();
+
   const mqttClient = useMemo(() => {
     return new PubSub({
-      region: "us-east-1",
-      endpoint: "wss://a3fy4j0hgwqqs8-ats.iot.us-east-1.amazonaws.com/mqtt",
+      region: "ap-southeast-2",
+      endpoint: "wss://aibmybrjyb7gc-ats.iot.ap-southeast-2.amazonaws.com/mqtt",
     });
   }, []);
 
@@ -102,132 +103,124 @@ export const MQTTPage = () => {
     present("Topic unsubscribed", 3000);
   }
 
-  if (page === "MQTTPage") {
-    return (
-      <IonPage>
-        <IonHeader translucent={true}>
+  return (
+    <IonPage>
+      <IonHeader translucent={true}>
+        <IonToolbar>
+          <IonTitle>MQTT Test Client</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent color="light">
+        <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle>MQTT Test Client</IonTitle>
+            <IonTitle size="large">MQTT Test Client</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent color="light">
-          <IonHeader collapse="condense">
-            <IonToolbar>
-              <IonTitle size="large">MQTT Test Client</IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <IonList inset>
-            <IonListHeader>
-              <IonLabel>
-                <h1>Connected Devices</h1>
-              </IonLabel>
-            </IonListHeader>
-            {connectedDevices?.map(({ name, id }) => {
-              return (
-                <IonItem
-                  button={true}
-                  onClick={() => {
-                    setSelectedDeviceId(id);
-                    setPage("");
-                  }}
-                >
-                  <IonLabel>{name}</IonLabel>
-                  <IonNote slot="end">Publish</IonNote>
-                </IonItem>
-              );
-            })}
-          </IonList>
-          <IonList inset>
-            <IonListHeader>
-              <IonLabel>
-                <h1>Subscribing</h1>
-              </IonLabel>
-            </IonListHeader>
-            <IonItem>
-              <IonInput
-                label={"Topic"}
-                placeholder={"Enter topic to subscribe to"}
-                value={subscribe.topic}
-                onIonInput={(e) => {
-                  setSubscribe((prev) => {
-                    return {
-                      ...prev,
-                      topic: e.target.value,
-                    };
-                  });
+        <IonList inset>
+          <IonListHeader>
+            <IonLabel>
+              <h1>Connected Devices</h1>
+            </IonLabel>
+          </IonListHeader>
+          {connectedDevices?.map(({ name, id, topic }) => {
+            return (
+              <IonItem
+                button={true}
+                onClick={() => {
+                  history.push(
+                    `/mqtt-test-client/${id}?deviceId=${id}&topic=${topic}`
+                  );
                 }}
-              />
-            </IonItem>
-
-            <IonItem button detail onClick={handleSubscribe}>
-              <IonLabel>Subscribe to topic</IonLabel>
-            </IonItem>
-          </IonList>
-
-          <IonList inset>
-            <IonListHeader>
-              <IonLabel>
-                <h1>Subscribed topics</h1>
-              </IonLabel>
-            </IonListHeader>
-            {subscribedTopics.map(({ topic, sub }, index) => {
-              return (
-                <IonItemSliding>
-                  <IonItem key={index}>
-                    <IonLabel>{topic}</IonLabel>
-                  </IonItem>
-
-                  <IonItemOptions>
-                    <IonItemOption
-                      color="danger"
-                      onClick={() => {
-                        handleUnsubscribe(topic, sub);
-                      }}
-                    >
-                      Unsubscribe
-                    </IonItemOption>
-                  </IonItemOptions>
-                </IonItemSliding>
-              );
-            })}
-            {subscribedTopics.length === 0 && (
-              <IonItem>
-                <IonLabel>No topics yet.</IonLabel>
+              >
+                <IonLabel>{name}</IonLabel>
+                <IonNote slot="end">Publish</IonNote>
               </IonItem>
-            )}
-          </IonList>
+            );
+          })}
+        </IonList>
+        <IonList inset>
+          <IonListHeader>
+            <IonLabel>
+              <h1>Subscribing</h1>
+            </IonLabel>
+          </IonListHeader>
+          <IonItem>
+            <IonInput
+              label={"Topic"}
+              placeholder={"Enter topic to subscribe to"}
+              value={subscribe.topic}
+              onIonInput={(e) => {
+                setSubscribe((prev) => {
+                  return {
+                    ...prev,
+                    topic: e.target.value,
+                  };
+                });
+              }}
+            />
+          </IonItem>
 
-          <IonList inset>
-            <IonListHeader>
-              <IonLabel>
-                <h1>Message log</h1>
-              </IonLabel>
-            </IonListHeader>
-            {messages.map((message, index) => {
-              return (
+          <IonItem button detail onClick={handleSubscribe}>
+            <IonLabel>Subscribe to topic</IonLabel>
+          </IonItem>
+        </IonList>
+
+        <IonList inset>
+          <IonListHeader>
+            <IonLabel>
+              <h1>Subscribed topics</h1>
+            </IonLabel>
+          </IonListHeader>
+          {subscribedTopics.map(({ topic, sub }, index) => {
+            return (
+              <IonItemSliding>
                 <IonItem key={index}>
-                  <IonLabel>
-                    <span className="font-semibold">[{message.topic}] </span>
-                    {message.received.toLocaleString()} : {message.message}
-                  </IonLabel>
+                  <IonLabel>{topic}</IonLabel>
                 </IonItem>
-              );
-            })}
-            {messages.length === 0 && (
-              <IonItem>
-                <IonLabel>No messages yet.</IonLabel>
+
+                <IonItemOptions>
+                  <IonItemOption
+                    color="danger"
+                    onClick={() => {
+                      handleUnsubscribe(topic, sub);
+                    }}
+                  >
+                    Unsubscribe
+                  </IonItemOption>
+                </IonItemOptions>
+              </IonItemSliding>
+            );
+          })}
+          {subscribedTopics.length === 0 && (
+            <IonItem>
+              <IonLabel>No topics yet.</IonLabel>
+            </IonItem>
+          )}
+        </IonList>
+
+        <IonList inset>
+          <IonListHeader>
+            <IonLabel>
+              <h1>Message log</h1>
+            </IonLabel>
+          </IonListHeader>
+          {messages.map((message, index) => {
+            return (
+              <IonItem key={index}>
+                <IonLabel>
+                  <span className="font-semibold">[{message.topic}] </span>
+                  {message.received.toLocaleString()} : {message.message}
+                </IonLabel>
               </IonItem>
-            )}
-          </IonList>
-        </IonContent>
-      </IonPage>
-    );
-  } else {
-    return (
-      <PublishPage
-        setPage={setPage}
-        selectedDeviceId={selectedDeviceId}
-      />
-    );
-  }
+            );
+          })}
+          {messages.length === 0 && (
+            <IonItem>
+              <IonLabel>No messages yet.</IonLabel>
+            </IonItem>
+          )}
+        </IonList>
+      </IonContent>
+    </IonPage>
+  );
 };
