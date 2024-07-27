@@ -9,6 +9,7 @@ import {
   IonSpinner,
   IonTitle,
   IonToolbar,
+  IonSearchbar,
 } from "@ionic/react";
 import { SubTitle } from "./Subtitle";
 import { BluetoothItem } from "./BluetoothItem";
@@ -18,10 +19,12 @@ import { PublishLogContext } from "../context";
 
 export const AddDevicePage = () => {
   const [bleDevices, setBleDevice] = useState([]);
+  const [showDevices, setShowDevices] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const history = useHistory();
 
-  const {connectedDevices, setConnectedDevices} = useContext(PublishLogContext)
+  const { connectedDevices, setConnectedDevices } =
+    useContext(PublishLogContext);
 
   const getBle = useCallback(async () => {
     let devices = [];
@@ -46,6 +49,7 @@ export const AddDevicePage = () => {
     setTimeout(async () => {
       await BleClient.stopLEScan();
       setBleDevice(devices);
+      setShowDevices(devices);
       setIsLoading(false);
       console.log("stopped scanning");
     }, 5000);
@@ -64,6 +68,13 @@ export const AddDevicePage = () => {
         { name: "4 - Bluetooth", rssi: "-87" },
         { name: "5 - Bluetooth", rssi: "-88" },
       ]);
+      setShowDevices([
+        { name: "1 - Bluetooth", rssi: "-84" },
+        { name: "2 - Bluetooth", rssi: "-85" },
+        { name: "3 - Bluetooth", rssi: "-86" },
+        { name: "4 - Bluetooth", rssi: "-87" },
+        { name: "5 - Bluetooth", rssi: "-88" },
+      ]);
       setIsLoading(false);
     }
   }, [getBle]);
@@ -71,10 +82,11 @@ export const AddDevicePage = () => {
   const connectDevice = useCallback(
     async (id, name) => {
       await BleClient.connect(id, (deviceId) => {
-        setConnectedDevices((prev) => prev.filter((device)=> device.id !== deviceId))
+        setConnectedDevices((prev) =>
+          prev.filter((device) => device.id !== deviceId)
+        );
         history.push("/device-list");
-        window.location.reload()
-
+        window.location.reload();
       });
 
       const services = await BleClient.getServices(id);
@@ -118,14 +130,29 @@ export const AddDevicePage = () => {
             <IonTitle size="large">Add new device</IonTitle>
           </IonToolbar>
         </IonHeader>
+        <IonSearchbar
+          debounce={500}
+          onIonInput={(e) => {
+            let query = "";
+            const target = e.target;
+            if (target) {
+              query = target.value.toLowerCase();
+            }
 
+            setShowDevices(
+              bleDevices.filter(
+                (d) => d?.name?.toLowerCase().indexOf(query) > -1
+              )
+            );
+          }}
+        ></IonSearchbar>
         <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
         {isLoading ? (
           <div className="flex justify-center items-center">
             <IonSpinner />
           </div>
         ) : (
-          bleDevices.map(({ id, name }) => (
+          showDevices.map(({ id, name }) => (
             <BluetoothItem
               name={name}
               icon={
