@@ -36,8 +36,6 @@ export const DeviceListPage = () => {
           </IonToolbar>
         </IonHeader>
 
-        <IonSearchbar></IonSearchbar>
-
         <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
         <IonList>
           {devices?.map((device) => (
