@@ -14,18 +14,15 @@ import {
   IonCardTitle,
   IonCardContent,
 } from "@ionic/react";
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { PublishLogContext } from "../context";
 import { useLocation } from "react-router";
 import qs from "query-string";
 
 export const PublishPage = () => {
-
   const location = useLocation();
 
-  const { deviceId:selectedDeviceId} = qs.parse(
-    location.search
-  );
+  const { deviceId: selectedDeviceId } = qs.parse(location.search);
   const [publishTopic, setPublishTopic] = useState("");
 
   const { connectedDevices, setConnectedDevices, data } =
@@ -46,6 +43,13 @@ export const PublishPage = () => {
     return device?.topic;
   }, [connectedDevices, selectedDeviceId]);
 
+  useEffect(() => {
+    const device = connectedDevices.find(({ id }) => selectedDeviceId === id);
+    if (device) {
+      setPublishTopic(device?.topic);
+    }
+  }, [connectedDevices, selectedDeviceId]);
+
   return (
     <IonPage>
       <IonHeader translucent={true}>
@@ -63,6 +67,7 @@ export const PublishPage = () => {
           <IonItem>
             <IonInput
               label={"Topic"}
+              value={publishTopic || ''}
               placeholder={"Enter topic to publish to"}
               onIonInput={(e) => {
                 setPublishTopic(e.target.value);

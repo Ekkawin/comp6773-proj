@@ -16,9 +16,8 @@ import {
   IonPage,
   IonNote,
 } from "@ionic/react";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { PublishLogContext } from "../context";
-import { PublishPage } from "./PublishPage";
 import { useHistory } from "react-router";
 
 export const MQTTPage = () => {
@@ -26,10 +25,16 @@ export const MQTTPage = () => {
   const [subscribe, setSubscribe] = useState({
     topic: "",
   });
-  const [subscribedTopics, setSubscribedTopics] = useState([]);
+  // const [subscribedTopics, setSubscribedTopics] = useState([]);
 
-  const { connectedDevices, messages, setMessages } =
-    useContext(PublishLogContext);
+  const {
+    connectedDevices,
+    messages,
+    setMessages,
+    publishData,
+    subscribedTopics,
+    setSubscribedTopics,
+  } = useContext(PublishLogContext);
 
   const history = useHistory();
 
@@ -41,6 +46,7 @@ export const MQTTPage = () => {
   }, []);
 
   function log(message, topic) {
+    console.log("message", message);
     setMessages((prev) => {
       const next = structuredClone(prev);
       next.push({
@@ -102,18 +108,59 @@ export const MQTTPage = () => {
     log("Unsubscribed from topic", topic);
     present("Topic unsubscribed", 3000);
   }
+  function handlePublish(publish) {
+    if (publish.topic === "" || publish.message === "") {
+      present("Publish topic or message cannot be empty");
+      return;
+    }
+
+    mqttClient.publish({
+      topics: publish.topic,
+      message: { msg: publish.message },
+    });
+    log(`Published ${publish.message}`, publish.topic);
+    present("Published message.", 3000);
+  }
+
+  useEffect(() => {
+    if (publishData?.topic) {
+      handlePublish(publishData);
+    }
+  }, [publishData]);
+
+  useEffect(() => {
+    const topics = [];
+    console.log('subscribedTopics', subscribedTopics)
+    subscribedTopics.forEach((element) => {
+      element.sub.unsubscribe()
+      console.log('element', element)
+
+      const sub = mqttClient
+        .subscribe({
+          topics: [element.topic],
+        })
+        .subscribe({
+          next: onMsgRcvd,
+        });
+      topics.push({ topic: element.topic, sub });
+    });
+    console.log('topics', topics)
+    setSubscribedTopics(topics);
+  }, []);
+
+  
 
   return (
     <IonPage>
       <IonHeader translucent={true}>
         <IonToolbar>
-          <IonTitle>MQTT Test Client</IonTitle>
+          <IonTitle>MQTT Client</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent color="light">
         <IonHeader collapse="condense">
           <IonToolbar>
-            <IonTitle size="large">MQTT Test Client</IonTitle>
+            <IonTitle size="large">MQTT Client</IonTitle>
           </IonToolbar>
         </IonHeader>
         <IonList inset>
@@ -163,6 +210,19 @@ export const MQTTPage = () => {
           <IonItem button detail onClick={handleSubscribe}>
             <IonLabel>Subscribe to topic</IonLabel>
           </IonItem>
+
+          {/* <IonItem
+            button
+            detail
+            onClick={() => {
+              mqttClient.publish({
+                topics: "helloworld",
+                message: { msg: "Hello" },
+              });
+            }}
+          >
+            <IonLabel>Subscribe to topic</IonLabel>
+          </IonItem> */}
         </IonList>
 
         <IonList inset>

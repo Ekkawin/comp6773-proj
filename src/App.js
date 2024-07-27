@@ -1,11 +1,5 @@
 import "./App.css";
-import React, {
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 import {
   IonApp,
   IonRouterOutlet,
@@ -48,8 +42,8 @@ import { Authenticator } from "@aws-amplify/ui-react";
 import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import amplifyconfig from "./amplifyconfiguration.json";
+
 import { BleClient, dataViewToText } from "@capacitor-community/bluetooth-le";
-import { PubSub } from "@aws-amplify/pubsub";
 import TestMQTTPage from "./components/TestMQTTPage";
 import { PublishPage } from "./components/PublishPage";
 
@@ -70,20 +64,14 @@ function App() {
 
   const [data, setData] = useState([]);
   const [messages, setMessages] = useState([]);
-
-  const mqttClient = useMemo(() => {
-    return new PubSub({
-      region: "ap-southeast-2",
-      endpoint: "wss://aibmybrjyb7gc-ats.iot.ap-southeast-2.amazonaws.com/mqtt",
-    });
-  }, []);
+  const [publishData, setPublishData] = useState({});
+  const [subscribedTopics, setSubscribedTopics] = useState([]);
 
   useEffect(() => {
     BleClient.initialize();
   }, []);
 
   useEffect(() => {
-    console.log("connectedDevices", connectedDevices);
     connectedDevices?.forEach(({ id, service, topic }) => {
       BleClient.startNotifications(id, service.id, service.readId, (res) => {
         setData((prev) => {
@@ -91,38 +79,21 @@ function App() {
           if (deviceData) {
             deviceData.logs.push(dataViewToText(res));
             const _prev = prev.filter(({ id: deviceId }) => deviceId !== id);
-
             return [..._prev, deviceData];
           }
-
           return [...prev, { id, logs: [dataViewToText(res)] }];
         });
-
         if (topic) {
-          mqttClient.publish({
-            topics: topic,
-            message: { msg: dataViewToText(res) },
-          });
-          console.log("topic", topic, new Date());
-          setMessages((prev) => {
-            const next = structuredClone(prev);
-            next.push({
-              message: dataViewToText(res),
-              received: new Date(),
-              topic,
-            });
-            return next;
-          });
+          setPublishData({ topic, message: dataViewToText(res) });
         }
       });
     });
-
     return () => {
       connectedDevices?.forEach(({ id, service }) => {
         BleClient.stopNotifications(id, service.id, service.readId);
       });
     };
-  }, [connectedDevices, mqttClient]);
+  }, [connectedDevices]);
 
   return (
     <Authenticator className="mt-10">
@@ -136,6 +107,9 @@ function App() {
                 setConnectedDevices,
                 messages,
                 setMessages,
+                publishData,
+                subscribedTopics,
+                setSubscribedTopics,
               }}
             >
               <IonReactRouter>
@@ -163,7 +137,7 @@ function App() {
                       exact={true}
                     />
                     {/* <Route
-                      path="/mqtt-test-client"
+                      path="/mqtt-test-client1"
                       render={() => (
                         <TestMQTTPage
                           setConnectedDevices={setConnectedDevices}
@@ -193,6 +167,11 @@ function App() {
                       <IonIcon icon={cloudOutline} />
                       <IonLabel>Cloud</IonLabel>
                     </IonTabButton>
+
+                    {/* <IonTabButton tab="aws-cloud1" href="/mqtt-test-client1">
+                      <IonIcon icon={cloudOutline} />
+                      <IonLabel>Cloud</IonLabel>
+                    </IonTabButton> */}
 
                     <IonTabButton tab="settings" href="/settings">
                       <IonIcon icon={cogOutline} />
