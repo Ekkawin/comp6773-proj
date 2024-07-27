@@ -1,6 +1,5 @@
 import {
   IonItem,
-  IonSearchbar,
   IonToggle,
   IonContent,
   IonHeader,
@@ -86,7 +85,7 @@ export const DevicePage = () => {
                 <IonTitle size="large">{device?.name || "Device 1"}</IonTitle>
               </IonToolbar>
             </IonHeader>
-            <IonSearchbar></IonSearchbar>
+            
 
             <SubTitle>DEVICE Data</SubTitle>
             <IonItem>
