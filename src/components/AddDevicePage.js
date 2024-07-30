@@ -83,28 +83,21 @@ export const AddDevicePage = () => {
     async (id, name) => {
       await BleClient.connect(id, (deviceId) => {
         setConnectedDevices((prev) =>
-          prev.filter((device) => device.id !== deviceId)
+          prev.filter((device) => device?.id !== deviceId)
         );
         history.push("/device-list");
-        window.location.reload();
+        // window.location.reload();
       });
+      console.log("id2", id, name);
 
-      const services = await BleClient.getServices(id);
-      const serviceId = services[0].uuid;
-      const readId = services[0].characteristics.find(
-        ({ properties }) => properties.read && properties.notify
-      ).uuid;
-      const writeId = services[0].characteristics.find(
-        ({ properties }) => properties.write
-      ).uuid;
-
-      setConnectedDevices([
-        ...connectedDevices,
-        { id, name, service: { id: serviceId, readId, writeId }, interval: 0 },
-      ]);
+      setConnectedDevices((prev) => {
+        console.log('id, name', {id, name})
+        console.log('prev', prev)
+        return [...prev, {id, name}]
+      });
       history.push("/device-list");
     },
-    [history, connectedDevices, setConnectedDevices]
+    [history, setConnectedDevices]
   );
 
   useEffect(() => {
@@ -159,6 +152,7 @@ export const AddDevicePage = () => {
                 <IonIcon
                   icon={addOutline}
                   onClick={() => {
+                    console.log("id", id);
                     setIsLoading(true);
                     connectDevice(id, name);
                   }}

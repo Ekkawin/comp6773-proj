@@ -43,9 +43,10 @@ import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import amplifyconfig from "./amplifyconfiguration.json";
 
-import { BleClient, dataViewToText } from "@capacitor-community/bluetooth-le";
+import { BleClient, dataViewToText, textToDataView } from "@capacitor-community/bluetooth-le";
 import TestMQTTPage from "./components/TestMQTTPage";
 import { PublishPage } from "./components/PublishPage";
+import { DataLogPage } from "./components/DataLogPage";
 
 Amplify.configure(amplifyconfig);
 
@@ -53,13 +54,26 @@ function App() {
   setupIonicReact();
 
   const [connectedDevices, setConnectedDevices] = useState([
-    {
-      name: "1",
-      id: "1231231283912",
-      isReceivingData: false,
-      topic: null,
-      service: { id: "123sadf", readId: "sdfg234", writeId: "123sdf234" },
-    },
+    // {
+    //   name: "1",
+    //   id: "1231231283912",
+    //   isReceivingData: false,
+    //   topics: [],
+    //   services: [{ id: "123sadf", readId: "sdfg234", writeId: "123sdf234" }],
+    // },
+    // {
+    //   name: "21",
+    //   id: "123221231283912",
+    //   isReceivingData: false,
+    //   topics: [],
+    //   services: [
+    //     {
+    //       id: "123sasdadf",
+    //       readId: "sdfsdfgg2asd34",
+    //       writeId: "123asdasdsdf234",
+    //     },
+    //   ],
+    // },
   ]);
 
   const [data, setData] = useState([]);
@@ -71,26 +85,62 @@ function App() {
     BleClient.initialize();
   }, []);
 
+  // console.log("connectedDevices", connectedDevices);
+
   useEffect(() => {
-    connectedDevices?.forEach(({ id, service, topic }) => {
-      BleClient.startNotifications(id, service.id, service.readId, (res) => {
-        setData((prev) => {
-          const deviceData = prev.find(({ id: deviceId }) => deviceId === id);
-          if (deviceData) {
-            deviceData.logs.push(dataViewToText(res));
-            const _prev = prev.filter(({ id: deviceId }) => deviceId !== id);
-            return [..._prev, deviceData];
+    connectedDevices?.forEach((device) => {
+      console.log("device?.services", device);
+      if (device?.services?.length) {
+        device?.services?.forEach((service) => {
+          if (service?.readId) {
+            BleClient.startNotifications(
+              device.id,
+              service.id,
+              service.readId,
+              (res) => {
+                setData((prev) => {
+                  const deviceData = prev.find(
+                    ({ charId }) => charId === service.readId
+                  );
+                  if (deviceData) {
+                    deviceData.logs.push(dataViewToText(res));
+                    const _prev = prev.filter(
+                      ({ charId }) => charId !== service.readId
+                    );
+                    return [..._prev, deviceData];
+                  }
+                  return [
+                    ...prev,
+                    { charId: service.readId, logs: [dataViewToText(res)] },
+                  ];
+                });
+                if (service?.topic) {
+                  setPublishData({
+                    topic: service.topic,
+                    message: dataViewToText(res),
+                  });
+                }
+              }
+            );
           }
-          return [...prev, { id, logs: [dataViewToText(res)] }];
         });
-        if (topic) {
-          setPublishData({ topic, message: dataViewToText(res) });
-        }
-      });
+      }
     });
     return () => {
-      connectedDevices?.forEach(({ id, service }) => {
-        BleClient.stopNotifications(id, service.id, service.readId);
+      connectedDevices?.forEach((device) => {
+        // console.log("device112", device);
+        if (device?.services) {
+          device?.services?.forEach((service) => {
+            // BleClient.write(
+            //   device.id,
+            //   service.id,
+            //   service?.writeId,
+            //   textToDataView("stop")
+            // );
+            console.log("service.readId", service.readId);
+            BleClient.stopNotifications(device.id, service.id, service.readId);
+          });
+        } 
       });
     };
   }, [connectedDevices]);
@@ -118,17 +168,22 @@ function App() {
                     <Redirect to="/device-list" />
                     <Route
                       path="/device-list"
-                      render={() => <DeviceListPage />}
+                      component={DeviceListPage}
                       exact={true}
                     />
                     <Route
                       path="/device-list/add-device"
-                      render={() => <AddDevicePage />}
+                      component={AddDevicePage}
                       exact={true}
                     />
                     <Route
                       path="/device-list/device/:deviceId"
-                      render={() => <DevicePage />}
+                      component={DevicePage}
+                      exact={true}
+                    />
+                    <Route
+                      path="/device-list/service/:serviceId"
+                      component={DataLogPage}
                       exact={true}
                     />
                     <Route
@@ -136,7 +191,7 @@ function App() {
                       render={() => <SettingsPage signOut={signOut} />}
                       exact={true}
                     />
-                    {/* <Route
+                    <Route
                       path="/mqtt-test-client1"
                       render={() => (
                         <TestMQTTPage
@@ -144,19 +199,24 @@ function App() {
                         />
                       )}
                       exact={true}
-                    /> */}
+                    />
                     <Route
                       path="/mqtt-test-client"
-                      render={() => <MQTTPage />}
+                      component={MQTTPage}
                       exact={true}
                     />
                     <Route
                       path="/mqtt-test-client/:deviceId"
-                      render={() => <PublishPage />}
+                      component={PublishPage}
                       exact={true}
                     />
+                    <Route exact path="/">
+                      <Redirect to={"/device-list"} />
+                    </Route>
+                    <Route>
+                      <Redirect to={"/device-list"} />
+                    </Route>
                   </IonRouterOutlet>
-
                   <IonTabBar slot="bottom">
                     <IonTabButton tab="device-list" href="/device-list">
                       <IonIcon icon={phonePortraitOutline} />

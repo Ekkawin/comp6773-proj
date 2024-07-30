@@ -13,6 +13,8 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
+  IonButton,
+  IonButtons,
 } from "@ionic/react";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { PublishLogContext } from "../context";
@@ -22,33 +24,43 @@ import qs from "query-string";
 export const PublishPage = () => {
   const location = useLocation();
 
-  const { deviceId: selectedDeviceId } = qs.parse(location.search);
-  const [publishTopic, setPublishTopic] = useState("");
+  const { deviceId: selectedDeviceId, serviceId } = qs.parse(location.search);
+  const [publishTopic, setPublishTopic] = useState(null);
 
   const { connectedDevices, setConnectedDevices, data } =
     useContext(PublishLogContext);
 
   const logs = useMemo(() => {
-    const l = data?.find(({ id }) => id === selectedDeviceId);
+    const charId = connectedDevices
+    .find(({ id }) => selectedDeviceId === id)
+    ?.services?.find((service) => service?.id === serviceId)?.readId
+
+    const l = data.find(({ charId:id }) => id === charId);
 
     if (l) {
       return l.logs;
     }
 
     return [];
-  }, [selectedDeviceId, data]);
+  }, [selectedDeviceId, data, connectedDevices, serviceId]);
 
-  const isPublished = useMemo(() => {
-    const device = connectedDevices?.find(({ id }) => id === selectedDeviceId);
-    return device?.topic;
-  }, [connectedDevices, selectedDeviceId]);
+  // const isPublished = useMemo(() => {
+  //   const device = connectedDevices?.find(({ id }) => id === selectedDeviceId);
+  //   return device?.topics;
+  // }, [connectedDevices, selectedDeviceId]);
 
   useEffect(() => {
-    const device = connectedDevices.find(({ id }) => selectedDeviceId === id);
+    const device = connectedDevices
+      .find(({ id }) => selectedDeviceId === id)
+      ?.services?.find((service) => service?.id === serviceId);
+
+    console.log("device", device);
     if (device) {
       setPublishTopic(device?.topic);
     }
-  }, [connectedDevices, selectedDeviceId]);
+  }, [connectedDevices, selectedDeviceId, serviceId]);
+
+  console.log("publishTopics?.length", publishTopic);
 
   return (
     <IonPage>
@@ -64,41 +76,56 @@ export const PublishPage = () => {
           </IonToolbar>
         </IonHeader>
         <IonList inset={true}>
-          <IonItem>
-            <IonInput
-              label={"Topic"}
-              value={publishTopic || ''}
-              placeholder={"Enter topic to publish to"}
-              onIonInput={(e) => {
-                setPublishTopic(e.target.value);
-              }}
-            />
-          </IonItem>
-          <IonItem>
-            <IonToggle
-              checked={isPublished}
-              onIonChange={(e) => {
-                const device = connectedDevices.find(
-                  ({ id }) => selectedDeviceId === id
-                );
-                console.log("selectedDeviceId", selectedDeviceId);
-                console.log("device", device);
-                if (e.detail.checked) {
-                  setConnectedDevices((prev) => [
-                    ...prev.filter(({ id }) => id !== selectedDeviceId),
-                    { ...device, topic: publishTopic },
-                  ]);
-                } else {
-                  setConnectedDevices((prev) => [
-                    ...prev.filter(({ id }) => id !== selectedDeviceId),
-                    { ...device, topic: null },
-                  ]);
-                }
-              }}
-            >
-              <IonLabel>Publish</IonLabel>
-            </IonToggle>
-          </IonItem>
+      
+              <IonItem>
+                <IonInput
+                  label={"Topic"}
+                  value={publishTopic || ""}
+                  placeholder={"Enter topic to publish to"}
+                  onIonInput={(e) => {
+                    setPublishTopic([e.target.value]);
+                  }}
+                />
+              </IonItem>
+              <IonItem>
+                <IonToggle
+                  checked={connectedDevices
+                    ?.find(({ id }) => id === selectedDeviceId)
+                    ?.services?.find((service) => service?.id === serviceId)?.topic}
+                  onIonChange={(e) => {
+                    console.log("selectedDeviceId", selectedDeviceId);
+                    // console.log("device", device);
+                    const device = connectedDevices?.find(
+                      ({ id }) => selectedDeviceId === id
+                    );
+                    const service = device?.services?.find(
+                      ({ id }) => id === serviceId
+                    );
+                    const _service = device?.services?.filter(
+                      ({ id }) => id !== serviceId
+                    );
+                    
+                    if (e.detail.checked) {
+                      service.topic = publishTopic;
+                      const services = [service, ..._service];
+                      setConnectedDevices((prev) => [
+                        ...prev.filter(({ id }) => id !== selectedDeviceId),
+                        { ...device, services },
+                      ]);
+                    } else {
+                      service.topic = null;
+                      const services = [service, _service];
+                      setConnectedDevices((prev) => [
+                        ...prev.filter(({ id }) => id !== selectedDeviceId),
+                        { ...device, services },
+                      ]);
+                    }
+                  }}
+                >
+                  <IonLabel>Publish</IonLabel>
+                </IonToggle>
+              </IonItem>
+          
         </IonList>
 
         <IonCard color="light">

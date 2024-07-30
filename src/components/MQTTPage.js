@@ -15,6 +15,8 @@ import {
   useIonToast,
   IonPage,
   IonNote,
+  IonItemGroup,
+  IonItemDivider,
 } from "@ionic/react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { PublishLogContext } from "../context";
@@ -130,10 +132,10 @@ export const MQTTPage = () => {
 
   useEffect(() => {
     const topics = [];
-    console.log('subscribedTopics', subscribedTopics)
+    console.log("subscribedTopics", subscribedTopics);
     subscribedTopics.forEach((element) => {
-      element.sub.unsubscribe()
-      console.log('element', element)
+      element.sub.unsubscribe();
+      console.log("element", element);
 
       const sub = mqttClient
         .subscribe({
@@ -144,11 +146,9 @@ export const MQTTPage = () => {
         });
       topics.push({ topic: element.topic, sub });
     });
-    console.log('topics', topics)
+    console.log("topics", topics);
     setSubscribedTopics(topics);
   }, []);
-
-  
 
   return (
     <IonPage>
@@ -169,19 +169,31 @@ export const MQTTPage = () => {
               <h1>Connected Devices</h1>
             </IonLabel>
           </IonListHeader>
-          {connectedDevices?.map(({ name, id, topic }) => {
+          {connectedDevices?.map((device) => {
             return (
-              <IonItem
-                button={true}
-                onClick={() => {
-                  history.push(
-                    `/mqtt-test-client/${id}?deviceId=${id}&topic=${topic}`
-                  );
-                }}
-              >
-                <IonLabel>{name}</IonLabel>
-                <IonNote slot="end">Publish</IonNote>
-              </IonItem>
+              <IonItemGroup>
+                <IonItemDivider>
+                  <IonLabel>{device?.name}</IonLabel>
+                </IonItemDivider>
+
+                {device?.services?.map((service) => {
+                  if (service?.readId) {
+                    return (
+                      <IonItem
+                        button={true}
+                        onClick={() => {
+                          history.push(
+                            `/mqtt-test-client/${device.id}?deviceId=${device.id}&serviceId=${service.id}&topic=${service?.topic}`
+                          );
+                        }}
+                      >
+                        <IonLabel>{service.readId}</IonLabel>
+                        <IonNote slot="end">Publish</IonNote>
+                      </IonItem>
+                    );
+                  }
+                })}
+              </IonItemGroup>
             );
           })}
         </IonList>
