@@ -114,7 +114,7 @@ export const PublishPage = () => {
                       ]);
                     } else {
                       service.topic = null;
-                      const services = [service, _service];
+                      const services = [service, ..._service];
                       setConnectedDevices((prev) => [
                         ...prev.filter(({ id }) => id !== selectedDeviceId),
                         { ...device, services },

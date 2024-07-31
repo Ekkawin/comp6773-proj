@@ -167,7 +167,7 @@ export const DevicePage = () => {
                   console.log("service?.uuid", service?.uuid);
                   console.log("service?.uuid", service?.inde);
                   return (
-                    <IonItemGroup>
+                    <IonItemGroup key={service?.uuid}>
                       <IonItemDivider>
                         <IonLabel>
                           Service{" "}
