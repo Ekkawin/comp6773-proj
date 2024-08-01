@@ -19,7 +19,7 @@ npm install
 If building to an iOS device, plug the device into your computer. You may need to enable [developer mode](https://docs.expo.dev/guides/ios-developer-mode/) on your iOS device, and allow your computer to connect to your iOS device. Then to build the source code, run:
 
 ```bash
-npx run cap
+npx cap run ios
 ```
 
 You should see some dialog options to select which device you would like to build to (simulator/real iPhone). The app should now be installed.
