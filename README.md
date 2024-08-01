@@ -16,7 +16,13 @@ In the root of the repository, run the following in a terminal to install the pr
 npm install
 ```
 
-If building to an iOS device, plug the device into your computer. You may need to enable [developer mode](https://docs.expo.dev/guides/ios-developer-mode/) on your iOS device, and allow your computer to connect to your iOS device. Then to build the source code, run:
+If building to an iOS device, plug the device into your computer. You may need to enable [developer mode](https://docs.expo.dev/guides/ios-developer-mode/) on your iOS device, and allow your computer to connect to your iOS device. To transpile the Javascript source into an XCode project, run:
+
+```bash
+npx cap sync
+```
+
+Then to build the code for an iOS device, run:
 
 ```bash
 npx cap run ios
