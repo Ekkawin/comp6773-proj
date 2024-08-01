@@ -1,5 +1,3 @@
-/** @jsxImportSource @emotion/react */
-
 import {
   IonSearchbar,
   IonContent,
@@ -7,18 +5,25 @@ import {
   IonTitle,
   IonToolbar,
   IonPage,
+  IonItem,
+  IonLabel,
+  IonNote,
+  IonList,
+  IonItemSliding,
+  IonItemOptions,
+  IonItemOption,
 } from "@ionic/react";
 
 import { SubTitle } from "./Subtitle";
-import { BluetoothItem } from "./BluetoothItem";
-import { useHistory } from "react-router";
+import React, { useHistory } from "react-router";
+import { useContext } from "react";
+import { PublishLogContext } from "../context";
+import { BleClient } from "@capacitor-community/bluetooth-le";
 
-export const DeviceListPage = ({
-  devices,
-  setSelectedDevice,
-  publishedDevices,
-}) => {
+export const DeviceListPage = () => {
   const history = useHistory();
+
+  const {connectedDevices: devices, setConnectedDevices} = useContext(PublishLogContext)
 
   return (
     <IonPage>
@@ -35,37 +40,39 @@ export const DeviceListPage = ({
           </IonToolbar>
         </IonHeader>
 
-        <IonSearchbar></IonSearchbar>
-
         <SubTitle>DEVICES CONNECTED TO GATEWAY</SubTitle>
-        {devices.map((device) => (
-          <BluetoothItem
-            name={device.name}
-            icon={
-              <div
-                onClick={() => {
-                    console.log("CLICK");
-                  const interval = (() => {
-                    const publishedDevice = publishedDevices?.find(
-                      ({ id }) => id === device.id
-                    );
-                    if (publishedDevice){
-                        return publishedDevice.interval
-                    }else{
-                        return 0
-                    }
-                  })();
-                  setSelectedDevice(device);
-                  history.push(
-                    `/device/${device.id}?serviceId=${device.service.id}&readId=${device.service.readId}&writeId=${device.service.writeId}&intervalId=${interval}&deviceId=${device.id}`
-                  );
-                }}
-              >
-                View
-              </div>
-            }
-          />
-        ))}
+        <IonList>
+          {devices?.map((device) => (
+              <IonItemSliding>
+             
+            <IonItem
+              button={true}
+              onClick={() => {
+                history.push(
+                  // `/device-list/device/${device.id}?serviceId=${device.service.id}&readId=${device.service.readId}&writeId=${device.service.writeId}&intervalId=${device.interval}&deviceId=${device.id}`
+                  `/device-list/device/${device.id}?deviceId=${device.id}`
+                );
+              }}
+            >
+              <IonLabel>{device?.name}</IonLabel>
+              <IonNote slot="end">View</IonNote>
+            </IonItem>
+
+            <IonItemOptions>
+                <IonItemOption
+                  color="danger"
+                  onClick={() => {
+                    BleClient.disconnect(device.id);
+                    setConnectedDevices((prev)=> prev.filter(({id}) => id !== device.id))
+                  }}
+                >
+                  Disconnect
+                </IonItemOption>
+              </IonItemOptions>
+            </IonItemSliding>
+
+          ))}
+        </IonList>
         <div
           className="pt-10 text-base text-center text-blue-700"
           onClick={() => {

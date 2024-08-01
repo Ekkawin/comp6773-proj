@@ -32,15 +32,6 @@ function SettingsPage({ signOut }) {
                         button
                         detail
                         onClick={() => {
-                            history.push("/mqtt-test-client");
-                        }}
-                    >
-                        <IonLabel>Open MQTT test client</IonLabel>
-                    </IonItem>
-                    <IonItem
-                        button
-                        detail
-                        onClick={() => {
                             signOut();
                             history.push("/device-list");
                         }}
