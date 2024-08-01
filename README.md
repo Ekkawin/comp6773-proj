@@ -1,5 +1,5 @@
 # COMP6773 Project
-By Io-Tea (T2 August 2024), for UNSW's COMP6733 major project.
+By Io-Tea, for UNSW's COMP6733 major project (T2 August 2024).
 
 ## Overview
 An iOS app that serves as an MQTT gateway for Bluetooth Low Energy (BLE) connected devices. See the full project report [here](https://docs.google.com/document/d/1q-OY4pcbmSYITKIX6146AHS_C1iR-LbfJMAFP771rkE/edit?usp=sharing). 
@@ -22,4 +22,4 @@ If building to an iOS device, plug the device into your computer. You may need t
 npx cap run ios
 ```
 
-You should see some dialog options to select which device you would like to build to (simulator/real iPhone). The app should now be installed.
+You should see some dialog options to select which device you would like to build to (simulator/real iPhone). After selecting your preferred option, the app should now be installed on your iOS device.
