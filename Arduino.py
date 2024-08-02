@@ -13,24 +13,12 @@ hs = hs3003.HS3003(bus)
 lps = lps22h.LPS22H(bus)
 imu = imu.IMU(bus)
 
-led_red = LED(1)
-led_green = LED(3)
-led_blue = LED(2)
-led_builtin = LED(4)
 
-red_on = False
-blue_on = False
-green_on = False
-
-red_timer_start = False
-blue_timer_start = False
 green_timer_start = False
 temps = []
 press = []
 imus = []
 
-
-#Task3
 
 def get_sensor_data(t):
     global press
@@ -52,66 +40,63 @@ def get_sensor_data(t):
 def notify_master(t):
     global notif_enabled
     global custom_read_char
+    global custom_read_char2
     global press
-    global data_type
+    global dataType1
+    global _typedata2
     global press
     global temps
     global imus
-    print("notif_enabled", notif_enabled)
+
     if notif_enabled:
-        if data_type == 'p':
-         print(press[0])
+        if dataType1 == 'p':
          custom_read_char.write(press[0])
-        elif data_type == 't':
+        elif dataType1 == 't':
          custom_read_char.write(temps[0])
         else:
          custom_read_char.write(imus[0])
-"""  
-def imu_function(t):
-    global imus
-    _imu = "x:{:>1.2f} y:{:>1.1f} z:{:>1.1f}".format(*imu.accel())
-    if len(imus) > 5 :
-        imus.pop(0)
-    imus.append(_imu)
-"""
+    if notif_enabled2:
+        if _typedata2 == 'p':
+         custom_read_char2.write(press[0])
+        elif _typedata2 == 't':
+         custom_read_char2.write(temps[0])
+        else:
+         custom_read_char2.write(imus[0])
+
     
 def event_handler(id, handle, data):
     global periph
     global services
     global custom_read_char
+    global custom_read_char2
     global notif_enabled
+    global notif_enabled2
     global press
     global temps
     global imus
-    global data_type
-    
-    print("id", id)
-    print("handle", handle)
+    global dataType1
+    global _typedata2
+
     if id == constants.EVT_GAP_CONNECTED:
         pass
     elif id == constants.EVT_GAP_DISCONNECTED:
         # restart advertisement
         notif_enabled = False
+        notif_enabled2 = False
         periph.advertise(device_name="Ed 33 BLE Sense")
     elif id == constants.EVT_GATTS_WRITE:
+        
         if handle == 16: # custom_wrt_char
-            print(data)
             if notif_enabled:
-
                 if data == 'stop':
                     notif_enabled = False
                 else:
-                    data_type = data
-                """
-                if data == 'p':
-                      data_type = 'p'
-                elif data == 't':
-                    for t in temps:
-                        custom_read_char.write(t)
-                elif data == 'i':
-                    for i in imus:
-                        custom_read_char.write(i)
-                """
+                    if data == 'p':
+                         dataType1 = 'p' 
+                    elif data == 't':
+                         dataType1 = 't'                         
+                    elif data == 'i':
+                         dataType1 = 'i' 
         elif handle == 19: # CCCD of custom_read_char
             print("noti",data)
             if int(data[0]) == 1:
@@ -119,10 +104,33 @@ def event_handler(id, handle, data):
             else:
                 notif_enabled = False
 
+        elif handle == 22: # custom_wrt_char
+            if notif_enabled2:
+                if data == 'stop':
+                    notif_enabled2 = False
+                else:
+                    if data == 'p':
+                         _typedata2 = 'p' 
+                    elif data == 't':
+                         _typedata2 = 't'                         
+                    elif data == 'i':
+                         _typedata2 = 'i'                   
+        elif handle == 25: # CCCD of custom_read_char
+            print("noti",data)
+            if int(data[0]) == 1:
+                notif_enabled2 = True
+            else:
+                notif_enabled2 = False
+
+
 notif_enabled = False
 custom_svc_uuid = UUID("4A981234-1CC4-E7C1-C757-F1267DD021E8")
 custom_wrt_char_uuid = UUID("4A981235-1CC4-E7C1-C757-F1267DD021E8")
 custom_read_char_uuid = UUID("4A981236-1CC4-E7C1-C757-F1267DD021E8")
+custom_svc_uuid2 = UUID("4A981237-1CC4-E7C1-C757-F1267DD021E8")
+custom_wrt_char_uuid2 = UUID("4A981238-1CC4-E7C1-C757-F1267DD021E8")
+custom_read_char_uuid2 = UUID("4A981239-1CC4-E7C1-C757-F1267DD021E8")
+
 
 custom_svc = Service(custom_svc_uuid)
 custom_wrt_char = Characteristic(custom_wrt_char_uuid,props=Characteristic.PROP_WRITE)
@@ -130,10 +138,19 @@ custom_read_char = Characteristic(custom_read_char_uuid,props=Characteristic.PRO
 custom_svc.addCharacteristic(custom_wrt_char)
 custom_svc.addCharacteristic(custom_read_char)
 
-data_type = "p"
+notif_enabled2 = False
+custom_svc2 = Service(custom_svc_uuid2)
+custom_wrt_char2 = Characteristic(custom_wrt_char_uuid2,props=Characteristic.PROP_WRITE)
+custom_read_char2 = Characteristic(custom_read_char_uuid2,props=Characteristic.PROP_READ | Characteristic.PROP_NOTIFY,attrs=Characteristic.ATTR_CCCD)
+custom_svc2.addCharacteristic(custom_wrt_char2)
+custom_svc2.addCharacteristic(custom_read_char2)
+
+dataType1 = "p"
+_typedata2 = "t"
 
 periph = Peripheral()
 periph.addService(custom_svc)
+periph.addService(custom_svc2)
 periph.setConnectionHandler(event_handler)
 periph.advertise(device_name="Ed 33 BLE Sense")
 
@@ -143,9 +160,5 @@ temp_tim.start()
 press_tim = Timer(2, period=5000000, mode=Timer.PERIODIC,callback=notify_master)
 press_tim.start()
 
-"""
-imu_tim = Timer(3, period=500000, mode=Timer.PERIODIC,callback=imu_function)
-imu_tim.start()
-"""
 
 
